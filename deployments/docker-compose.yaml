@@ -1,0 +1,38 @@
+services:
+  # 🔐 Auth Service
+  auth-service:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/digital_contract_db?search_path=auth_schema
+    depends_on:
+      - db
+
+  # 📄 Contract Service
+  contract-service:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: contract
+    depends_on:
+      - db
+
+  # 🗄️ Database (already discussed)
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=Rediet
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=digital_contract_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
