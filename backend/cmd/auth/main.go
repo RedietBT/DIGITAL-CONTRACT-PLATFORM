@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
@@ -9,6 +10,10 @@ import (
 
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
+
+	if dsn == "" {
+        log.Fatal("❌ DATABASE_DSN is not set in environment variables")
+    }
 
 	//Call the function from our internal package
 	db, err := database.Connect(dsn)
@@ -19,6 +24,16 @@ func main() {
 
 	log.Println("✅ Auth Service started successfully!")
 
-	// Keep service alive
-	select {}
+	//Define a simple health check route
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK - Auth Service is alive"))
+	})
+
+	log.Println("🚀 Auth Service listening on :8080")
+
+	//This rplaces 'select{}' and keeps the app runing
+	if err := http.ListenAndServe(":8080", nil); err != nil{
+		log.Fatalf("❌ Server failed: %v", err)
+	}
 }

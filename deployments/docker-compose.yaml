@@ -19,9 +19,11 @@ services:
       args:
         SERVICE_NAME: auth
     environment:
-      - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+      - DATABASE_DSN=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
     depends_on:
       - db
+    ports:
+      - "8080:8080"
 
   contract-service:
     build:
@@ -30,9 +32,11 @@ services:
       args:
         SERVICE_NAME: contract
     environment: 
-      - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+      - DATABASE_DSN=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
     depends_on:
       - db
+    ports:
+      - "8081:8080"
 
 volumes:
   postgres_data:
