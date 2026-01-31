@@ -6,8 +6,8 @@ services:
       dockerfile: Dockerfile
       args:
         SERVICE_NAME: auth
-    environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/digital_contract_db?search_path=auth_schema
+      environment:
+        - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
     depends_on:
       - db
 
@@ -18,6 +18,8 @@ services:
       dockerfile: Dockerfile
       args:
         SERVICE_NAME: contract
+      environment:
+      - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
     depends_on:
       - db
 
