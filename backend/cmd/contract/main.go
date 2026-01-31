@@ -1,45 +1,23 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"os"
-	"fmt"
-	"time"
 
-	_"github.com/lib/pq" // Make sure to run 'go get github.com/lib/pq' in /backend
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
 )
 
 func main() {
-	// 1. Get the connection string from Environment Variables
-	// Note: In Docker, the host is "db", not "localhost"
-	connStr := os.Getenv("DATABASE_URL")
-	if connStr == "" {
-		connStr = "postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable"
-	}
+	dsn := os.Getenv("DATABASE_DSN")
 
-	var db *sql.DB
-	var err error
-	
-	// 2. Retry logic: Wait for DB to be fully ready
-	for i := 0; i < 5; i++ {
-		db, err = sql.Open("postgres", connStr)
-		if err == nil{
-			err = db.Ping()
-		}
-
-		if err == nil {
-			fmt.Println("✅ SUCCESS: Contract Service connected to Postgres!")
-			break
-		}
-
-		fmt.Printf("⏳ DB not ready yet (attempt %d/5)... waiting\n", i+1)
-		time.Sleep(2 * time.Second)
-	}
-
+	//Call the function from our internal package
+	db, err := database.Connect(dsn)
 	if err != nil{
-		log.Fatal("❌ FAILED: Could not connect to DB after retries:", err)
+		log.Fatal("❌ FAILED: Could not connect to DB: %v", err)
 	}
+	defer db.Close()
+	log.Println("✅ Contract Service started successfully!")
+
 	// Keep service alive
 	select {}
 
