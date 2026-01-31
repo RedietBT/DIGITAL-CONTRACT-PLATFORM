@@ -1,29 +1,6 @@
+version: '3.8'
+
 services:
-  # 🔐 Auth Service
-  auth-service:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: auth
-      environment:
-        - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
-    depends_on:
-      - db
-
-  # 📄 Contract Service
-  contract-service:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: contract
-      environment:
-      - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
-    depends_on:
-      - db
-
-  # 🗄️ Database (already discussed)
   db:
     image: postgres:15-alpine
     environment:
@@ -34,6 +11,28 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  auth-service:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth
+    environment:
+      - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+    depends_on:
+      - db
+
+  contract-service:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: contract
+    environment: 
+      - DATABASE_URL=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+    depends_on:
+      - db
 
 volumes:
   postgres_data:
