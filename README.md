@@ -1,6 +1,3 @@
-Location: C:\Users\HP\Documents\projects\digital-contract-platform\README.md Purpose: Overall project summary.
-
-Markdown
 # Digital Contract Platform
 
 A microservices-based platform for managing digital contracts.

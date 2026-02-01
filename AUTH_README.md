@@ -1,6 +1,3 @@
-Location: C:\Users\HP\Documents\projects\digital-contract-platform\AUTH_README.md Purpose: Technical details specifically for the Auth service.
-
-Markdown
 # Auth Service Technical Guide
 
 ## 🛠️ Swagger Documentation
