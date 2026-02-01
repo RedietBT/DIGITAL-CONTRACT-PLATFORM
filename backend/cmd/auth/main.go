@@ -10,6 +10,7 @@ import (
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
 	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/auth/docs"
 )
 
 // @title           Digital Contract Platform API
@@ -44,7 +45,9 @@ func main() {
 	http.HandleFunc("/auth/register", h.Register)
 
 	//Swagger UI Route
-	http.Handle("/swagger/", httpSwagger.WrapHandler)
+	http.Handle("/swagger/", httpSwagger.Handler(
+    httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // Force the URL
+	))
 
 	log.Println("✅ Auth Service started successfully!")
 	log.Println("📖 Swagger Docs available at http://localhost:8080/swagger/index.html")
