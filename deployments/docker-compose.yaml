@@ -12,6 +12,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI (Dashboard)
+
   auth-service:
     build:
       context: ../backend
@@ -21,8 +27,11 @@ services:
     environment:
       - DATABASE_DSN=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
       - JWT_SECRET=super-secret-production-key-change-me
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
     depends_on:
       - db
+      - mailhog
     ports:
       - "8080:8080"
 
