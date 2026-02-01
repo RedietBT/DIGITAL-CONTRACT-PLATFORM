@@ -12,6 +12,6 @@ CREATE TABLE IF NOT EXISTS auth_schema.users (
     role VARCHAR(50) NOT NULL DEFAULT 'user',
     status VARCHAR(20) NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login_at TIMESTAMPTZ -- Nullable until first login
 );

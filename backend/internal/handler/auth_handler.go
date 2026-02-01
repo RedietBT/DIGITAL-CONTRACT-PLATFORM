@@ -26,7 +26,7 @@ type RegisterRequest struct{
 	//required: must be present
 	//email: must be a valid email format
 	//min=8: password must be at least 8 characters
-	Email string `json: "email" validate:"required,email" example:"dev@example.com"`
+	Email string `json:"email" validate:"required,email" example:"dev@example.com"`
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 }
 
