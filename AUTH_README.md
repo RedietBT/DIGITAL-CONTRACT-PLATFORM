@@ -1,22 +1,36 @@
 # Auth Service Technical Guide
 
+This service handles user identity, secure authentication, and account recovery for the Digital Contract Platform.
+
 ## 🛠️ Swagger Documentation
-If you change any code in the handlers, you **must** update the documentation so the UI stays in sync.
+If you change any code in the handlers (annotations), you **must** update the documentation so the UI stays in sync.
 
 **Command to update:**
-Run this from the `backend` folder:
-`swag init -g cmd/auth/main.go --output cmd/auth/docs`
+1. Open your terminal in the `backend` folder.
+2. Run:
+   `swag init -g cmd/auth/main.go --output cmd/auth/docs`
+3. Rebuild your containers: `docker-compose up --build`
+
+---
+
+## 📧 Email Testing (Mailhog)
+We use **Mailhog** as a local SMTP server to test emails without sending them to real addresses.
+
+- **Web Interface**: [http://localhost:8025](http://localhost:8025)
+- **SMTP Port**: `1025` (Internal to Docker)
+
+---
 
 ## 🧪 Manual Test Scenarios
 
 ### 1. Register a User
 - **Endpoint**: `POST /auth/register`
 - **Payload**: 
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "securePassword123"
-  }
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
 2. Login
 Endpoint: POST /auth/login
 
@@ -27,27 +41,53 @@ JSON
   "email": "user@example.com",
   "password": "securePassword123"
 }
-Expected Response: A 200 OK with a JSON object containing the token.
+Expected Response: 200 OK with a JSON token.
 
+3. Forgot Password (Request Token)
+Endpoint: POST /auth/forgot-password
+
+Payload:
+
+JSON
+{
+  "email": "user@example.com"
+}
+Action: Check Mailhog for the 8-character token.
+
+4. Reset Password (Update Password)
+Endpoint: POST /auth/reset-password
+
+Payload:
+
+JSON
+{
+  "email": "user@example.com",
+  "token": "PASTE_THE_CODE_FROM_MAILHOG",
+  "new_password": "newSecurePassword456"
+}
 🔐 Security Overview
-Passwords: Hashed using Bcrypt (never stored in plain text).
+Passwords: Hashed using Bcrypt. We never store plain text passwords.
 
-Authentication: Stateless via JSON Web Tokens (JWT).
+Authentication: Stateless via JWT (JSON Web Tokens).
 
-Validation: Strict input validation for emails and password length.
+Recovery: One-time-use tokens with a 15-minute expiry stored in auth_schema.password_resets.
+
+Validation: Strict input checks for email format and minimum password length (8 chars).
+
+🛠️ Database Debugging
+If you need to see what is happening inside the database:
+
+View Reset Tokens: docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT * FROM auth_schema.password_resets;"
+
+View Users: docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT email, password_hash FROM auth_schema.users;"
 
 
 ---
 
-### 💡 Why we included the extra parts:
-You asked if you should only paste the first bit—you *could*, but including the **Login** test data and the **Security Overview** is better because:
-1.  **Context**: It reminds you that `bcrypt` is working in the background.
-2.  **Efficiency**: When you come back to this project in a month, you won't have to look through your Go code to remember what the JSON keys were named.
+### 🏁 What this covers:
+* **Registration**: The initial setup.
+* **Login**: How to get your JWT.
+* **Forgot/Reset**: The full loop using Mailhog.
+* **Database**: The exact commands to verify your data.
 
-### 🚀 Final Step
-Now that you have the files:
-1.  Open your terminal in the `backend` folder.
-2.  Run that `swag init` command one last time to make sure your Swagger is 100% updated.
-3.  Go to `http://localhost:8080/swagger/index.html` and **Register** then **Login**.
-
-**Would you like me to show you how to check if your JWT is valid using an online tool
+**Once you've pasted this, your documentation is perfect. Should we move on to building the Auth Middleware so you can start protecting your future routes?**
