@@ -32,6 +32,11 @@ func main() {
 	}
 	defer db.Close()
 
+	//Calling AutoMigrate to ensure the User table is created
+	if err := database.RunMigrations(db); err != nil{
+		log.Fatalf("❌ Failed to run migrations: %v", err)
+	}
+
 	//1. Initiatize Repositories
 	repo := repository.NewPostgresUserRepository(db)
 
