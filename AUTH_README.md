@@ -31,63 +31,54 @@ We use **Mailhog** as a local SMTP server to test emails without sending them to
   "email": "user@example.com",
   "password": "securePassword123"
 }
-2. Login
-Endpoint: POST /auth/login
-
-Payload:
-
-JSON
+```
+### 2. Login
+- **Endpoint**: `POST /auth/login`
+- **Payload**:
+```json
 {
   "email": "user@example.com",
   "password": "securePassword123"
 }
+```
 Expected Response: 200 OK with a JSON token.
 
-3. Forgot Password (Request Token)
-Endpoint: POST /auth/forgot-password
-
-Payload:
-
-JSON
+### 3. Forgot Password (Request Token)
+- **Endpoint**: `POST /auth/forgot-password`
+- **Payload**: 
+```json
 {
   "email": "user@example.com"
 }
+```
 Action: Check Mailhog for the 8-character token.
 
-4. Reset Password (Update Password)
-Endpoint: POST /auth/reset-password
-
-Payload:
-
-JSON
+### 4. Reset Password (Update Password)
+- **Endpoint**: `POST /auth/reset-password`
+- **Payload**: 
+```json
 {
   "email": "user@example.com",
   "token": "PASTE_THE_CODE_FROM_MAILHOG",
   "new_password": "newSecurePassword456"
 }
-🔐 Security Overview
-Passwords: Hashed using Bcrypt. We never store plain text passwords.
+```
+### 🔐 Security Overview
+- **Passwords**: Hashed using Bcrypt. We never store plain text passwords.
+- **Authentication**: Stateless via JWT (JSON Web Tokens).
+- **Recovery**: One-time-use tokens with a 15-minute expiry stored in auth_schema.password_resets.
+- **Validation**: Strict input checks for email format and minimum password length (8 chars).
 
-Authentication: Stateless via JWT (JSON Web Tokens).
-
-Recovery: One-time-use tokens with a 15-minute expiry stored in auth_schema.password_resets.
-
-Validation: Strict input checks for email format and minimum password length (8 chars).
-
-🛠️ Database Debugging
+### 🛠️ Database Debugging
 If you need to see what is happening inside the database:
 
-View Reset Tokens: docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT * FROM auth_schema.password_resets;"
+View Reset Tokens: 
+```
+docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT * FROM auth_schema.password_resets;"
+```
 
-View Users: docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT email, password_hash FROM auth_schema.users;"
-
-
+View Users: 
+```
+docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT email, password_hash FROM auth_schema.users;"
+```
 ---
-
-### 🏁 What this covers:
-* **Registration**: The initial setup.
-* **Login**: How to get your JWT.
-* **Forgot/Reset**: The full loop using Mailhog.
-* **Database**: The exact commands to verify your data.
-
-**Once you've pasted this, your documentation is perfect. Should we move on to building the Auth Middleware so you can start protecting your future routes?**
