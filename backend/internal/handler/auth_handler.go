@@ -115,3 +115,72 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 
 }
+
+type ForgotPasswordRequest struct{
+	Email string `json:"email" validate:"required,email" example:"dev@example.com"`
+}
+
+//ForgotPassword godoc
+// @Summary      Forgot Password
+// @Description  Initiate password reset process by sending a reset link to the user's email.
+// @Tags         auth
+//@Accept       json
+//@Produce      json
+//@Param        request body      ForgotPasswordRequest  true  "Forgot Password Info"
+//@Success      200     {string}  string "If the email exists, a reset code has been sent."
+// @Failure      400     {string}  string "Invalid Request"
+// @Failure      500     {string}  string "Internal Server Error"
+//@Router       /auth/forgot-password [post]
+func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
+	var req ForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	//Logic call
+	_ = h.svc.ForgotPassword(r.Context(), req.Email)
+
+	// We always return 200 so hackers can't "fish" for valid emails
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("If that email is in our system, a reset code has been sent."))
+}
+
+//ResetPassword godoc
+// ResetPassword godoc
+// @Summary      Reset password using token
+// @Description  Verifies the reset token and updates the user's password in the database.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body      ResetPasswordRequest  true  "Reset Details"
+// @Success      200     {string}  string "Password reset successful"
+// @Failure      400     {string}  string "Invalid token or expired"
+// @Failure      500     {string}  string "Internal Server Error"
+// @Router       /auth/reset-password [post]
+type ResetPasswordRequest struct {
+    Email       string `json:"email" validate:"required,email"`
+    Token       string `json:"token" validate:"required"`
+    NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req ResetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Validate the struct
+	if err := validate.Struct(req); err != nil {
+		http.Error(w, "Invalid input data", http.StatusBadRequest)
+		return
+	}
+
+	//Call service logic 
+	err := h.svc.ResetPassword(r.Context() , req.Email, req.Token, req.NewPassword)
+	if err != nil{
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	w.Write([]byte("Password has been reset successfully. You can now login."))
+}

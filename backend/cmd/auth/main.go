@@ -54,6 +54,8 @@ func main() {
 	//4. Setup Routes
 	http.HandleFunc("/auth/register", h.Register)
 	http.HandleFunc("/auth/login", h.Login)
+	http.HandleFunc("/auth/forgot-password", h.ForgotPassword)
+	http.HandleFunc("/auth/reset-password", h.ResetPassword)
 
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(

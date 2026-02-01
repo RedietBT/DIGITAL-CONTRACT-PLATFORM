@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/email"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,6 +18,8 @@ import (
 type AuthService interface{
 	Register(ctx context.Context, email, password string) (*models.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
+	ForgotPassword(ctx context.Context, emailAddr string) (error)
+	ResetPassword(ctx context.Context, email, token, newPassword string) error
 }
 
 type authService struct {
@@ -91,4 +96,62 @@ func (s *authService) generateToken(user *models.User) (string, error){
 
 	//3. Sign the token with our secret key
 	return token.SignedString([]byte(s.jwtSecret))
+}
+
+func (s *authService) ForgotPassword(ctx context.Context, emailAddr string) error {
+	//1. Check if the user exists (don't tell the user if they don't exist for security reasons)
+	_, err := s.repo.GetByEmail(ctx, emailAddr)
+	if err != nil{
+		return nil// We return nil to prevent "Email Enumeration" attacks
+	}
+
+	//2. Generate a random secur token
+	b := make([]byte, 4)// 8 Characters total
+	rand.Read(b)
+	token := hex.EncodeToString(b)
+
+	//3. Save to DB with 15-minute expiry
+	expiry := time.Now().Add(15 * time.Minute)
+	err = s.repo.SaveResetToken(ctx, emailAddr, token, expiry)
+	if err != nil{
+		return err
+	}
+
+	//4. Send the actual email via our utiltiy
+	return email.SendResetEmail(emailAddr, token)
+}
+
+func (s *authService) ResetPassword(ctx context.Context, email, token, newPassword string) error {
+
+	//1. Get the token from DB
+	storedToken, expiryAt, err := s.repo.GetResetToken(ctx, email)
+	if err != nil{
+		return errors.New("invalid or expired token")
+	}
+
+	// 2. Check if expired
+    if time.Now().After(expiryAt) {
+        s.repo.DeleteResetToken(ctx, email) // Clean up expired token
+        return errors.New("token has expired")
+    }
+
+	// 3. Verify token match
+    if storedToken != token {
+        return errors.New("invalid token")
+    }
+
+	// 4. Hash the new password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+    if err != nil {
+        return err
+    }
+
+	// 5. Update user password in DB (You might need to add UpdatePassword to your repo)
+    err = s.repo.UpdatePassword(ctx, email, string(hashedPassword))
+    if err != nil {
+        return err
+    }
+
+	// 6. Delete the token so it can't be used again
+    return s.repo.DeleteResetToken(ctx, email)
 }

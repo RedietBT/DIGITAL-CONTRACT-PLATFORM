@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 )
@@ -11,6 +12,10 @@ import (
 type UserRepository interface{
 	Create(ctx context.Context, user *models.User) error
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	SaveResetToken(ctx context.Context, email, token string, expiresAt time.Time) error
+	GetResetToken(ctx context.Context, email string) (string, time.Time, error)
+	DeleteResetToken(ctx context.Context, email string) (error)
+	UpdatePassword(ctx context.Context, email, hashedPassword string) error
 }
 
 type postgresUserRepository struct {
@@ -57,4 +62,41 @@ func (r *postgresUserRepository) GetByEmail(ctx context.Context, email string) (
 			return  nil, err
 		}
 		return user, nil
+}
+
+func (r *postgresUserRepository) SaveResetToken(ctx context.Context, email, token string, expiresAt time.Time) error{
+	query := `
+		INSERT INTO auth_schema.password_resets (email, token, expires_at)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (email) DO UPDATE SET token = $2, expires_at = $3`
+	_, err := r.db.ExecContext(ctx, query, email, token, expiresAt)
+	return err
+}
+
+func (r *postgresUserRepository) GetResetToken(ctx context.Context, email string) (string, time.Time, error){
+	query := `
+		SELECT token, expires_at
+		FROM auth_schema.password_resets
+		WHERE email = $1`
+	var token string
+	var expiresAt time.Time
+	err := r.db.QueryRowContext(ctx, query, email).Scan(&token, &expiresAt)
+	if err != nil{
+		return "", time.Time{}, err
+	}
+	return token, expiresAt, nil
+}
+
+func (r *postgresUserRepository) DeleteResetToken(ctx context.Context, email string) error{
+	query := `
+		DELETE FROM auth_schema.password_resets
+		WHERE email = $1`
+	_, err := r.db.ExecContext(ctx, query, email)
+	return err
+}
+
+func (r *postgresUserRepository) UpdatePassword(ctx context.Context, email, hashedPassword string) error {
+    query := `UPDATE auth_schema.users SET password_hash = $1 WHERE email = $2`
+    _, err := r.db.ExecContext(ctx, query, hashedPassword, email)
+    return err
 }
