@@ -6,8 +6,17 @@ import (
 	"os"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/handler"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title           Digital Contract Platform API
+// @version         1.0
+// @description     This is the Auth Service for the Digital Contract Platform.
+// @host            localhost:8080
+// @BasePath        /
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 
@@ -22,7 +31,23 @@ func main() {
 	}
 	defer db.Close()
 
+	//1. Initiatize Repositories
+	repo := repository.NewPostgresUserRepository(db)
+
+	//2. Initiatize Services( Inject Repo)
+	svc := service.NewAuthService(repo)
+
+	//3. Initiatize Handlers( Inject Services)
+	h := handler.NewAuthHandler(svc)
+
+	//4. Setup Routes
+	http.HandleFunc("/auth/register", h.Register)
+
+	//Swagger UI Route
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
+
 	log.Println("✅ Auth Service started successfully!")
+	log.Println("📖 Swagger Docs available at http://localhost:8080/swagger/index.html")
 
 	//Define a simple health check route
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
