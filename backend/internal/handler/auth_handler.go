@@ -69,3 +69,49 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(user)
 
 }
+
+//LoginRequest represents the input data from login endpoint.
+type LoginRequest struct{
+	Email string `json:"email" validate:"required,email" example:"dev@example.com"`
+	Password string `json:"password" validate:"required,min=8" example:"secret123"`
+}
+
+//LoginResponse represents the output data( the token)
+type LoginResponse struct{
+	Token string `json:"token"`
+}
+
+//Login godoc
+// @Summary      User login
+// @Description  Authenticate user and returns a JWT token upon successful login.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body      LoginRequest  true  "Login Info"
+// @Success      200     {object}  LoginResponse
+// @Failure      400     {string}  string "Invalid Request"
+// @Failure      401     {string}  string "Unauthorized"
+// @Failure      500     {string}  string "Server Error"
+// @Router       /auth/login [post]
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request){
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	//Validate the Struct
+	if err := validate.Struct(req); err != nil{
+		http.Error(w, "Invalid email or password format", http.StatusBadRequest)
+		return
+	}
+
+	token, err := h.svc.Login(r.Context(), req.Email, req.Password)
+	if err != nil{
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
+
+}

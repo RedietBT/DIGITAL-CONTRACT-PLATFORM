@@ -20,6 +20,7 @@ services:
         SERVICE_NAME: auth
     environment:
       - DATABASE_DSN=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+      - JWT_SECRET=super-secret-production-key-change-me
     depends_on:
       - db
     ports:

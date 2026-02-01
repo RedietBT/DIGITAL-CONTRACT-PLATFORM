@@ -20,10 +20,14 @@ import (
 // @BasePath        /
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
-
 	if dsn == "" {
         log.Fatal("❌ DATABASE_DSN is not set in environment variables")
     }
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("❌ JWT_SECRET is not set in environment variables")
+	}
 
 	//Call the function from our internal package
 	db, err := database.Connect(dsn)
@@ -37,17 +41,19 @@ func main() {
 		log.Fatalf("❌ Failed to run migrations: %v", err)
 	}
 
+
 	//1. Initiatize Repositories
 	repo := repository.NewPostgresUserRepository(db)
 
 	//2. Initiatize Services( Inject Repo)
-	svc := service.NewAuthService(repo)
+	svc := service.NewAuthService(repo, jwtSecret)
 
 	//3. Initiatize Handlers( Inject Services)
 	h := handler.NewAuthHandler(svc)
 
 	//4. Setup Routes
 	http.HandleFunc("/auth/register", h.Register)
+	http.HandleFunc("/auth/login", h.Login)
 
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(
@@ -69,4 +75,5 @@ func main() {
 	if err := http.ListenAndServe(":8080", nil); err != nil{
 		log.Fatalf("❌ Server failed: %v", err)
 	}
+
 }
