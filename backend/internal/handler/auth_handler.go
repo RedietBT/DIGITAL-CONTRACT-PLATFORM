@@ -146,6 +146,12 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
 	w.Write([]byte("If that email is in our system, a reset code has been sent."))
 }
 
+type ResetPasswordRequest struct {
+    Email       string `json:"email" validate:"required,email"`
+    Token       string `json:"token" validate:"required"`
+    NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+
 //ResetPassword godoc
 // ResetPassword godoc
 // @Summary      Reset password using token
@@ -158,11 +164,6 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
 // @Failure      400     {string}  string "Invalid token or expired"
 // @Failure      500     {string}  string "Internal Server Error"
 // @Router       /auth/reset-password [post]
-type ResetPasswordRequest struct {
-    Email       string `json:"email" validate:"required,email"`
-    Token       string `json:"token" validate:"required"`
-    NewPassword string `json:"new_password" validate:"required,min=8"`
-}
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req ResetPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -180,6 +181,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	err := h.svc.ResetPassword(r.Context() , req.Email, req.Token, req.NewPassword)
 	if err != nil{
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	w.Write([]byte("Password has been reset successfully. You can now login."))

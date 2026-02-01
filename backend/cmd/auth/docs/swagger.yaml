@@ -1,5 +1,13 @@
 basePath: /
 definitions:
+  handler.ForgotPasswordRequest:
+    properties:
+      email:
+        example: dev@example.com
+        type: string
+    required:
+    - email
+    type: object
   handler.LoginRequest:
     properties:
       email:
@@ -36,6 +44,20 @@ definitions:
     - email
     - password
     type: object
+  handler.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - email
+    - new_password
+    - token
+    type: object
   models.User:
     properties:
       created_at:
@@ -60,6 +82,37 @@ info:
   title: Digital Contract Platform API
   version: "1.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiate password reset process by sending a reset link to the
+        user's email.
+      parameters:
+      - description: Forgot Password Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: If the email exists, a reset code has been sent.
+          schema:
+            type: string
+        "400":
+          description: Invalid Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Forgot Password
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:
@@ -123,6 +176,37 @@ paths:
           schema:
             type: string
       summary: Register a new user
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the reset token and updates the user's password in the
+        database.
+      parameters:
+      - description: Reset Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successful
+          schema:
+            type: string
+        "400":
+          description: Invalid token or expired
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Reset password using token
       tags:
       - auth
 swagger: "2.0"
