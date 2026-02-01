@@ -52,7 +52,8 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	//3. Apply the migrations(Up)
-	if err := m.Up(); err != migrate.ErrNoChange{
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange{
 		return  fmt.Errorf("migration up failed: %v", err)
 	}
 

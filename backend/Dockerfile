@@ -25,8 +25,11 @@ WORKDIR /root/
 # Copy the binaries from the builder
 COPY --from=builder /app/service .
 
+# Create the internal directory first
+RUN mkdir -p ./internal/migrations
+
 # IMPORTANT: Copy the migrations folder into the final container
-COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/internal/migrations ./internal/migrations
 
 # Expose ports (if needed later)
 EXPOSE 8080
