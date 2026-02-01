@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-
+	"errors"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
@@ -25,7 +25,14 @@ func NewAuthService(repo repository.UserRepository) AuthService{
 }
 
 func(s *authService) Register(ctx context.Context, email, password string)(*models.User, error){
-	//GenerateFromPassword handles salting and hashing password in one go.
+
+	//1. Check if user with the email already exists
+	existingUser, _ := s.repo.GetByEmail(ctx, email)
+	if existingUser != nil{
+		return  nil, errors.New("user with this email already exists")
+	}
+
+	//2. GenerateFromPassword handles salting and hashing password in one go.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil{
 		return nil, err

@@ -30,17 +30,17 @@ type RegisterRequest struct{
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 }
 
-//Refiater godoc
-//@Summary Register a new user
-//@Description Create a new user account and returns the user abject(excluding password).
-//@ Tags auth
-//@Accept json
-//@Produce json
-//@Param request body RegisterRequest true "Registration Info"
-//@Success 201 {object} model.User
-//@Failure 400 {string} string "Invalide Request"
-//@Failure 500 {string} string "Server Error"
-//@Router /auth/register [post]
+// Register godoc
+// @Summary      Register a new user
+// @Description  Create a new user account and returns the user object (excluding password).
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body      RegisterRequest  true  "Registration Info"
+// @Success      201     {object}  models.User
+// @Failure      400     {string}  string "Invalid Request"
+// @Failure      500     {string}  string "Server Error"
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request){
 	var req RegisterRequest
 
