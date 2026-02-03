@@ -83,6 +83,32 @@ info:
   version: "1.0"
 paths:
   /auth/admin/users:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a user from the system. Admin only.
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: ID required
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a user
+      tags:
+      - admin
     get:
       consumes:
       - application/json
@@ -176,6 +202,32 @@ paths:
       tags:
       - auth
   /auth/me:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the currently authenticated user's account.
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: ID required
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete own account
+      tags:
+      - auth
     get:
       consumes:
       - application/json

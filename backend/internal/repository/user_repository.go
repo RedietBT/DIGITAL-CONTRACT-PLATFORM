@@ -20,7 +20,7 @@ type UserRepository interface{
 	GetByID(ctx context.Context, UserID string) (*models.User, error)
 	UpdateLastLogin(ctx context.Context, userID string) (error)
 	GetAllUsers(ctx context.Context) ([]*models.User ,error)
-	DeleteUser(ctx context.Context, userID string) (error)
+	DeleteUser(ctx context.Context, UserID string) (error)
 
 }
 
@@ -195,9 +195,9 @@ func (r *postgresUserRepository) GetAllUsers(ctx context.Context) ([]*models.Use
 }
 
 //DeleteUser using userID
-func (r *postgresUserRepository) DeleteUser(ctx context.Context, userID string) error{
+func (r *postgresUserRepository) DeleteUser(ctx context.Context, UserID string) error{
 	query := `DELETE FROM auth_schema.users WHERE id=$1`
-	result, err := r.db.ExecContext(ctx, query, userID)
+	result, err := r.db.ExecContext(ctx, query, UserID)
 	if err != nil{
 		return err
 	} 

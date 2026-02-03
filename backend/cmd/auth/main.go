@@ -73,6 +73,12 @@ func main() {
 	adminOnly := middleware.RoleMiddleware("admin", svc)(http.HandlerFunc(h.GetAllUsers))
 	protectedAdmin := middleware.AuthMiddleware(jwtSecret)(adminOnly)
 	http.Handle("/auth/admin/users", protectedAdmin)
+	
+	//User Deletes themselves (auth only)
+	http.Handle("/auth/me/delete", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.DeleteMe)))
+
+	//Admin deletes anyone (Auth + Admin Role)
+	http.Handle("/auth/admin/users/delete", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.DeleteUser)))
 
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(

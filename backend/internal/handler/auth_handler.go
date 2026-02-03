@@ -248,3 +248,57 @@ func (h *AuthHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
 		return
 	}
 }
+
+
+// DeleteUser godoc
+// @Summary      Delete a user
+// @Description  Removes a user from the system. Admin only.
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id   query      string  true  "User ID"
+// @Success      204  {string}   string  "No Content"
+// @Failure      400  {string}   string  "ID required"
+// @Router       /auth/admin/users [delete]
+func (h *AuthHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	// 1. Get the ID of the person LOOGED IN (from JWT/Context)
+	currentUserID,_ := r.Context().Value(middleware.UserIDKey).(string)
+
+	// 2. Get the ID from the URL (if provided)
+	targetID := r.URL.Query().Get("id")
+
+	var idToDelete string
+
+	if targetID != ""{
+		// If an ID is in the URL, the user is trying to delete someone else.
+        // Our RoleMiddleware (in main.go) ensures only Admins reach this logic.
+		idToDelete = targetID
+	} else {
+		// If not ID in URL, the user is tring to delete THEMSELVES.
+		idToDelete =currentUserID
+	}
+
+	// 3. Call service
+	if err := h.svc.DeleteUser(r.Context(), idToDelete); err != nil{
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// DeleteMe godoc
+// @Summary      Delete own account
+// @Description  Deletes the currently authenticated user's account.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id   query      string  true  "User ID"
+// @Success      204  {string}  string  "No Content"
+// @Failure      400  {string}   string  "ID required"
+// @Router       /auth/me [delete]
+func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request){
+	h.DeleteUser(w, r)
+}

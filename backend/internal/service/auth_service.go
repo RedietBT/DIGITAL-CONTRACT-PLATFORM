@@ -22,6 +22,7 @@ type AuthService interface{
 	ResetPassword(ctx context.Context, email, token, newPassword string) (error)
 	GetUserByID(ctx context.Context, UserID string) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]*models.User, error)
+	DeleteUser(ctx context.Context, UserID string) (error) 
 }
 
 type authService struct {
@@ -175,4 +176,20 @@ func (s *authService) GetAllUsers(ctx context.Context) ([]*models.User, error){
 		return nil, err
 	}
 	return users, nil
+}
+
+func (s *authService) DeleteUser(ctx context.Context, UserID string) error {
+	// Checke if user exsists
+	_, err := s.repo.GetByID(ctx, UserID)
+	if err != nil{
+		return errors.New("User Not Found")
+	}
+
+	// Delete the user
+	err = s.repo.DeleteUser(ctx, UserID)
+	if err != nil{
+		return errors.New("Failed to Delet user from database")
+	}
+
+	return nil
 }
