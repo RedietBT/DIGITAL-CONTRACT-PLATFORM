@@ -82,6 +82,34 @@ info:
   title: Digital Contract Platform API
   version: "1.0"
 paths:
+  /auth/admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all registered users. Accessible only by admin
+        users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get all users (Admin only)
+      tags:
+      - auth
   /auth/forgot-password:
     post:
       consumes:
