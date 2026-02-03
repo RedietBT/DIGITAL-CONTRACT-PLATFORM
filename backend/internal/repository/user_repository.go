@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
@@ -19,6 +20,7 @@ type UserRepository interface{
 	GetByID(ctx context.Context, UserID string) (*models.User, error)
 	UpdateLastLogin(ctx context.Context, userID string) (error)
 	GetAllUsers(ctx context.Context) ([]*models.User ,error)
+	DeleteUser(ctx context.Context, userID string) (error)
 
 }
 
@@ -139,12 +141,14 @@ func (r *postgresUserRepository) GetByID(ctx context.Context, UserID string) (*m
 		return &user, nil
 }
 
+// UpdateLastLogin 
 func (r *postgresUserRepository) UpdateLastLogin(ctx context.Context, userID string) error {
 	query := `UPDATE auth_schema.users SET last_login_at = NOW() WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
 }
 
+// GetAllUsers
 func (r *postgresUserRepository) GetAllUsers(ctx context.Context) ([]*models.User, error) {
 	// 1. Define the qurey
 	query := `SELECT id, email, role, status, created_at, updated_at, last_login_at 
@@ -188,4 +192,21 @@ func (r *postgresUserRepository) GetAllUsers(ctx context.Context) ([]*models.Use
 		}
 
 		return users, nil 
+}
+
+//DeleteUser using userID
+func (r *postgresUserRepository) DeleteUser(ctx context.Context, userID string) error{
+	query := `DELETE FROM auth_schema.users WHERE id=$1`
+	result, err := r.db.ExecContext(ctx, query, userID)
+	if err != nil{
+		return err
+	} 
+
+	//Check if a row was actually deleted
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("no user with that ID")
+	}
+
+	return nil
 }
