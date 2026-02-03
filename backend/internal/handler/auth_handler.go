@@ -188,14 +188,16 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Password has been reset successfully. You can now login."))
 }
 
-//GetProfile godoc
+// GetProfile godoc
 // @Summary      Get user profile
 // @Description  Retrieves the profile information of the authenticated user.
 // @Tags         auth
-// @Security     ApiKeyAuth
+// @Accept       json
 // @Produce      json
-// @Success      200     {object}  service.UserProfile
-// @Failure      401     {string}  string "Unauthorized"
+// @Security     ApiKeyAuth
+// @Success      200 {object} models.User
+// @Failure      401 {string} string "Unauthorized"
+// @Failure      404 {string} string "User not found"
 // @Router       /auth/me [get]
 func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 	// 1. Pull UserID out of the context (set by middleware)

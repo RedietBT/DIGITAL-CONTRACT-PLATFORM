@@ -21,9 +21,9 @@ import (
 // @BasePath        /
 
 // @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
+// @in                         header
+// @name                       Authorization
+// @description                Type "Bearer" followed by a space and JWT token.
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 	if dsn == "" {

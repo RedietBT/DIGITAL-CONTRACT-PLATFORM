@@ -147,6 +147,31 @@ paths:
       summary: User login
       tags:
       - auth
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the profile information of the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:
@@ -209,4 +234,10 @@ paths:
       summary: Reset password using token
       tags:
       - auth
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
