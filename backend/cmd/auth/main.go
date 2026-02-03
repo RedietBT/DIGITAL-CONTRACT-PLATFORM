@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/auth/docs"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/handler"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
 	httpSwagger "github.com/swaggo/http-swagger"
-	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/auth/docs"
 )
 
 // @title           Digital Contract Platform API
@@ -52,10 +53,15 @@ func main() {
 	h := handler.NewAuthHandler(svc)
 
 	//4. Setup Routes
+	// Public routes
 	http.HandleFunc("/auth/register", h.Register)
 	http.HandleFunc("/auth/login", h.Login)
 	http.HandleFunc("/auth/forgot-password", h.ForgotPassword)
 	http.HandleFunc("/auth/reset-password", h.ResetPassword)
+
+	// Protected route (Only accessible with a valid token)
+	protectedProfile := middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.GetProfile))
+	http.Handle("/auth/me", protectedProfile)
 
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(

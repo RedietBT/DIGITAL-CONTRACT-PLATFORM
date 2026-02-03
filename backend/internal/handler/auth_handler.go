@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
 	"github.com/go-playground/validator/v10"
 )
@@ -185,4 +186,32 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("Password has been reset successfully. You can now login."))
+}
+
+//GetProfile godoc
+// @Summary      Get user profile
+// @Description  Retrieves the profile information of the authenticated user.
+// @Tags         auth
+// @Security     ApiKeyAuth
+// @Produce      json
+// @Success      200     {object}  service.UserProfile
+// @Failure      401     {string}  string "Unauthorized"
+// @Router       /auth/me [get]
+func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
+	// 1. Pull UserID out of the context (set by middleware)
+	userID, ok := r.Context().Value(middleware.UserIDkey).(string)
+	if !ok {
+		http.Error(w, "Could not find user in context", http.StatusUnauthorized)
+	}
+
+	// 2. Featch user from DB using the ID
+	user, err := h.svc.GetUserByID(r.Context(), userID)
+	if err != nil{
+		http.Error(w, "User not Found", http.StatusUnauthorized)
+		return
+	}
+
+	// 3. Return the user
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }

@@ -19,7 +19,8 @@ type AuthService interface{
 	Register(ctx context.Context, email, password string) (*models.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
 	ForgotPassword(ctx context.Context, emailAddr string) (error)
-	ResetPassword(ctx context.Context, email, token, newPassword string) error
+	ResetPassword(ctx context.Context, email, token, newPassword string) (error)
+	GetUserByID(ctx context.Context, UserID string) (*models.User, error)
 }
 
 type authService struct {
@@ -154,4 +155,12 @@ func (s *authService) ResetPassword(ctx context.Context, email, token, newPasswo
 
 	// 6. Delete the token so it can't be used again
     return s.repo.DeleteResetToken(ctx, email)
+}
+
+func (s *authService) GetUserByID(ctx context.Context, UserID string) (*models.User, error){
+	user, err := s.repo.GetByID(ctx, UserID)
+	if err != nil{
+		return nil, err
+	}
+	return user, nil
 }
