@@ -17,6 +17,7 @@ type UserRepository interface{
 	DeleteResetToken(ctx context.Context, email string) (error)
 	UpdatePassword(ctx context.Context, email, hashedPassword string) (error)
 	GetByID(ctx context.Context, UserID string) (*models.User, error)
+	UpdateLastLogin(ctx context.Context, userID string) (error)
 }
 
 //postgresUserRepository is the Postgres implementation of UserRepository
@@ -134,4 +135,10 @@ func (r *postgresUserRepository) GetByID(ctx context.Context, UserID string) (*m
 			return  nil, err
 		}
 		return &user, nil
+}
+
+func (r *postgresUserRepository) UpdateLastLogin(ctx context.Context, userID string) error {
+	query := `UPDATE auth_schema.users SET last_login_at = NOW() WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, userID)
+	return err
 }

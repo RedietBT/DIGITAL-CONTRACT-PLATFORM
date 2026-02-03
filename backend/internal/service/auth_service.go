@@ -77,6 +77,9 @@ func(s *authService) Login(ctx context.Context, email, password string) (string,
 		return "", errors.New("Invalid Credentials")
 	}
 
+	//Update last login time
+	s.repo.UpdateLastLogin(ctx, user.ID)
+
 	//3. Generate JWT Token
 	return s.generateToken(user)
 }
