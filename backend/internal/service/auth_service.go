@@ -21,6 +21,7 @@ type AuthService interface{
 	ForgotPassword(ctx context.Context, emailAddr string) (error)
 	ResetPassword(ctx context.Context, email, token, newPassword string) (error)
 	GetUserByID(ctx context.Context, UserID string) (*models.User, error)
+	GetAllUsers(ctx context.Context) ([]*models.User, error)
 }
 
 type authService struct {
@@ -166,4 +167,12 @@ func (s *authService) GetUserByID(ctx context.Context, UserID string) (*models.U
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *authService) GetAllUsers(ctx context.Context) ([]*models.User, error){
+	users, err := s.repo.GetAllUsers(ctx)
+	if err != nil{
+		return nil, err
+	}
+	return users, nil
 }

@@ -5,13 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 //We define a custom type for the context key to avoid collisions
 type contextkey string
-const UserIDkey contextkey = "userID"
+const UserIDKey contextkey = "userID"
 
+// AuthMiddleware is a middleware that validates JWT tokens and extracts user information
 func AuthMiddleware(jwtSecret string ) func (http.Handler) http.Handler{
 	return func (next http.Handler) http.Handler{
 		return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request){
@@ -42,9 +44,40 @@ func AuthMiddleware(jwtSecret string ) func (http.Handler) http.Handler{
 			userID := claims["sub"].(string)
 
 			// 4. Add user ID to request context and move to next handler
-			ctx := context.WithValue(r.Context(), UserIDkey, userID)
+			ctx := context.WithValue(r.Context(), UserIDKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 	
+}
+
+// RoleMiddleware checks if the user has the required role to access the endpoint
+func RoleMiddleware(requiredRole string, svc service.AuthService) func(http.Handler) http.Handler{
+	return func(next http.Handler) http.Handler{
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+			// 1. Extract user ID from context
+			userID, ok := r.Context().Value(UserIDKey).(string)
+
+			if !ok {
+				http.Error(w, "User ID not found in context", http.StatusNotFound)
+			return
+			}
+
+			// 2. Call the service to get user 
+			user, err := svc.GetUserByID(r.Context(),userID)
+			if err !=nil{
+				http.Error(w, "User not Found", http.StatusNotFound)
+				return
+			}
+
+			//3. Compare userRole to requiredRole
+			if user.Role != requiredRole{
+				http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
+				return
+			}
+
+			//4. Proceed to next handler
+			next.ServeHTTP(w, r)
+		})
+	}
 }

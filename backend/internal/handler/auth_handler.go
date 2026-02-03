@@ -201,7 +201,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 // @Router       /auth/me [get]
 func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 	// 1. Pull UserID out of the context (set by middleware)
-	userID, ok := r.Context().Value(middleware.UserIDkey).(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		http.Error(w, "Could not find user in context", http.StatusUnauthorized)
 		return
@@ -217,4 +217,34 @@ func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 	// 3. Return the user
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+// GetAllUsers godoc
+// @Summary      Get all users (Admin only)
+// @Description  Retrieves a list of all registered users. Accessible only by admin users.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Success      200 {array} models.User
+// @Failure      401 {string} string "Unauthorized"
+// @Failure      403 {string} string "Forbidden"
+// @Router       /auth/admin/users [get]
+func (h *AuthHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
+	// 1. Call the service
+	// Note: Since this is behind RoleMiddleware, we KNOW the user is an admin
+	users, err := h.svc.GetAllUsers(r.Context())
+	if err != nil{
+		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the header to JSON
+	w.Header().Set("Content-Type", "application/json")
+
+	// 3. Encode the slice of users into response
+	if err := json.NewEncoder(w).Encode(users); err != nil{
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }

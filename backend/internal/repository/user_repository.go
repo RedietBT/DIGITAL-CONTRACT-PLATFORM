@@ -18,6 +18,8 @@ type UserRepository interface{
 	UpdatePassword(ctx context.Context, email, hashedPassword string) (error)
 	GetByID(ctx context.Context, UserID string) (*models.User, error)
 	UpdateLastLogin(ctx context.Context, userID string) (error)
+	GetAllUsers(ctx context.Context) ([]*models.User ,error)
+
 }
 
 //postgresUserRepository is the Postgres implementation of UserRepository
@@ -141,4 +143,49 @@ func (r *postgresUserRepository) UpdateLastLogin(ctx context.Context, userID str
 	query := `UPDATE auth_schema.users SET last_login_at = NOW() WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, userID)
 	return err
+}
+
+func (r *postgresUserRepository) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+	// 1. Define the qurey
+	query := `SELECT id, email, role, status, created_at, updated_at, last_login_at 
+        FROM auth_schema.users 
+        ORDER BY created_at DESC`
+
+		// 2. Use QureyContext to get rows
+		rows, err := r.db.QueryContext(ctx, query)
+		if err != nil{
+			return nil, err
+		}
+
+		defer rows.Close() // Always close rows to prevent memory leaks!
+
+		var users []*models.User
+
+		// 3. Iterate through the rows
+		for rows.Next(){
+			var u models.User
+			// Scan each column into the struct fields
+			err := rows.Scan(
+				&u.ID,
+				&u.Email,
+				&u.Role,
+				&u.Status,
+				&u.CreatedAt,
+				&u.UpdatedAt,
+				&u.LastLoginAt,
+			)
+
+			if err != nil{
+				return nil, err
+			}
+
+			// Add the user to our slice
+			users = append(users, &u)
+		}
+
+		if err = rows.Err(); err != nil{
+			return nil, err
+		}
+
+		return users, nil 
 }

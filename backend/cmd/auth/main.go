@@ -67,6 +67,12 @@ func main() {
 	// Protected route (Only accessible with a valid token)
 	protectedProfile := middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.GetProfile))
 	http.Handle("/auth/me", protectedProfile)
+	
+	// We create the "Admin Only" version of the handler
+	// We wrap h.GetAllUsers in RoleMiddleware first
+	adminOnly := middleware.RoleMiddleware("admin", svc)(http.HandlerFunc(h.GetAllUsers))
+	protectedAdmin := middleware.AuthMiddleware(jwtSecret)(adminOnly)
+	http.Handle("/auth/admin/users", protectedAdmin)
 
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(
