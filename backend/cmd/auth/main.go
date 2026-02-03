@@ -19,6 +19,11 @@ import (
 // @description     This is the Auth Service for the Digital Contract Platform.
 // @host            localhost:8080
 // @BasePath        /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 	if dsn == "" {

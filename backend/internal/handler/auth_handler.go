@@ -202,12 +202,13 @@ func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 	userID, ok := r.Context().Value(middleware.UserIDkey).(string)
 	if !ok {
 		http.Error(w, "Could not find user in context", http.StatusUnauthorized)
+		return
 	}
 
 	// 2. Featch user from DB using the ID
 	user, err := h.svc.GetUserByID(r.Context(), userID)
 	if err != nil{
-		http.Error(w, "User not Found", http.StatusUnauthorized)
+		http.Error(w, "User not Found", http.StatusNotFound)
 		return
 	}
 
