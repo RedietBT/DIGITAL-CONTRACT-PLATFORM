@@ -364,12 +364,14 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	// 1. Pull UserID out of the context (set by middleware)
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
 
+	// 2. Decode the request body
 	var req ChangePasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return 
 	}
 
+	//Call the server
 	if err := h.svc.ChangePassword(r.Context(), userID, req.OldPassword, req.NewPassword); err != nil{
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return 
@@ -378,4 +380,16 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Password updated successfully"})
 	
+}
+
+//Logout godoc
+// @Summary      Logout user
+// @Description  Informs the client to clear the session.
+// @Tags         auth
+// @Success      200 {object} map[string]string
+// @Router       /auth/logout [post]
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request){
+	//In a stateless JWT app, we simply tell the client we are done.
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})
 }
