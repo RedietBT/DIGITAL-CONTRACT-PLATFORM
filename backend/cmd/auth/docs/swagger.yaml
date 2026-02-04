@@ -37,6 +37,13 @@ definitions:
       token:
         type: string
     type: object
+  handler.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   handler.RegisterRequest:
     properties:
       email:
@@ -219,6 +226,19 @@ paths:
       summary: User login
       tags:
       - auth
+  /auth/logout:
+    post:
+      description: Informs the client to clear the session.
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout user
+      tags:
+      - auth
   /auth/me:
     delete:
       consumes:
@@ -333,6 +353,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Change own password
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Provides a new access token using a valid refresh token.
+      parameters:
+      - description: Refresh Token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"access_token": "new_jwt_here"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid or expired token
+          schema:
+            type: string
+      summary: Refresh access token
       tags:
       - auth
   /auth/register:

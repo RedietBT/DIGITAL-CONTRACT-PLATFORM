@@ -107,13 +107,18 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	token, err := h.svc.Login(r.Context(), req.Email, req.Password)
+	accessToken, refreshToken, err := h.svc.Login(r.Context(), req.Email, req.Password)
 	if err != nil{
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	// Send both to the User
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"access_token":  accessToken,
+        "refresh_token": refreshToken,
+	})
 
 }
 
@@ -392,4 +397,42 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request){
 	//In a stateless JWT app, we simply tell the client we are done.
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})
+}
+
+type RefreshRequest struct {
+    RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+// Refresh godoc
+// @Summary      Refresh access token
+// @Description  Provides a new access token using a valid refresh token.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      RefreshRequest  true  "Refresh Token"
+// @Success      200      {object}  map[string]string "{"access_token": "new_jwt_here"}"
+// @Failure      401      {string}  string            "Invalid or expired token"
+// @Router       /auth/refresh [post]
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+
+	// 1. Decode the Body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Call the service to validate and generate a new JWT
+	newAccessToken, err := h.svc.RefreshAccessToken(r.Context(), req.RefreshToken)
+	if err != nil {
+		//401 Unautherized because the session is no longer valid
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// 3. Return the new access token
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"access_token": newAccessToken,
+	})
 }

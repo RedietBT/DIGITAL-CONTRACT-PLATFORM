@@ -17,7 +17,7 @@ import (
 //AuthService defines the business logic for user authentication and registration.
 type AuthService interface{
 	Register(ctx context.Context, email, password string) (*models.User, error)
-	Login(ctx context.Context, email, password string) (string, error)
+	Login(ctx context.Context, email, password string) (string, string, error)
 	ForgotPassword(ctx context.Context, emailAddr string) (error)
 	ResetPassword(ctx context.Context, email, token, newPassword string) (error)
 	GetUserByID(ctx context.Context, UserID string) (*models.User, error)
@@ -25,6 +25,7 @@ type AuthService interface{
 	DeleteUser(ctx context.Context, UserID string) (error) 
 	UpdateEmail(ctx context.Context, UserID string, newEmail string) (error)
 	ChangePassword(ctx context.Context, userID, oldpassword, newpassword string) (error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
 }
 
 type authService struct {
@@ -68,24 +69,55 @@ func(s *authService) Register(ctx context.Context, email, password string)(*mode
 }
 
 //Login authenticates a user and returns a JWT token upon successful login.
-func(s *authService) Login(ctx context.Context, email, password string) (string, error){
+func(s *authService) Login(ctx context.Context, email, password string) (string, string, error){
 	//1. Get user from DB
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil{
-		return "", errors.New("Invalid Credentials")
+		return "", "", errors.New("Invalid Credentials")
+	}
+
+	// Check account status
+	if user.Status != "active" {
+		return "", "", errors.New("account is" + user.Status + ". Please contact support")
 	}
 
 	//2. Compare Bcrypt hash
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil{
-		return "", errors.New("Invalid Credentials")
+		return "", "", errors.New("Invalid Credentials")
 	}
 
-	//Update last login time
-	s.repo.UpdateLastLogin(ctx, user.ID)
+	//Update last login time (Asynchronous or ignore error)
+	_ = s.repo.UpdateLastLogin(ctx, user.ID)
 
-	//3. Generate JWT Token
-	return s.generateToken(user)
+	//3. Generate JWT BOTH tokens
+	accessToken, err := s.generateToken(user)
+	if err != nil{
+		return "", "", err
+	}
+
+	// 4. Generate Refresh Token
+	refreshToken := s.generateRandomString(32)
+
+	// 5. SAVE the refresh token to the database
+	// We set it to expire in 7 days
+	expiry := time.Now().Add(7 * 24 * time.Hour)
+	err = s.repo.SaveRefreshToken(ctx, user.ID, refreshToken, expiry)
+	if err != nil {
+		return "", "", errors.New("Failed to create sessions")
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+// Helper method to generate the refresh token
+func (s *authService) generateRandomString(n int) string{
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+
+	return hex.EncodeToString(b)
 }
 
 //generateToken creates a JWT token for the authenticated user.
@@ -239,4 +271,31 @@ func (s *authService) ChangePassword(ctx context.Context, userID, oldpassword, n
 
 	// 4. Update the DB
 	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
+}
+
+//Refresh acces Token
+func(s *authService) RefreshAccessToken(ctx context.Context, refreshToken string) (string, error){
+	// 1. Get the full model from Db
+	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
+	if err != nil{
+		return "", errors.New("invalid refresh token")
+	}
+
+	// 2. Check if token is expired
+	if time.Now().After(rt.ExpiresAt){
+		// Clean up the database
+		_= s.repo.DeleteRefreshToken(ctx, refreshToken)
+		return "", errors.New("refresh token expired")
+	}
+
+	// 3. Get user details to create a new JWT
+	user, err := s.repo.GetByID(ctx, rt.UserID)
+
+	// 4. Check if user is still active
+	if user.Status != "active" {
+		return "", errors.New("account is no longer activce contact help")
+	}
+
+	// 5. Generate and return the new short_lived Access Token
+	return s.generateToken(user)
 }

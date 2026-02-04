@@ -86,6 +86,9 @@ func main() {
 	//Change password route
 	http.Handle("/auth/me/password", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.ChangePassword)))
 
+	// Publicly accessible, but requires a valid Refresh Token in the body
+	http.HandleFunc("/auth/refresh", h.Refresh)
+
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(
     httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // Force the URL

@@ -22,7 +22,9 @@ type UserRepository interface{
 	GetAllUsers(ctx context.Context) ([]*models.User ,error)
 	DeleteUser(ctx context.Context, UserID string) (error)
 	UpdateEmail(ctx context.Context, UserID string, newEmail string) (error)
-
+	SaveRefreshToken(ctx context.Context, userId, token string, expiresAt time.Time) (error)
+	GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error)
+	DeleteRefreshToken(ctx context.Context, token string) (error)
 }
 
 //postgresUserRepository is the Postgres implementation of UserRepository
@@ -236,6 +238,56 @@ func (r *postgresUserRepository) UpdateEmail(ctx context.Context, UsrID string, 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0{
 		return errors.New("user not found")
+	}
+
+	return nil
+}
+
+//Save Refresh Token to database
+func(r *postgresUserRepository) SaveRefreshToken(ctx context.Context, userId, token string, expiresAt time.Time) error{
+	query := `INSERT INTO auth_schema.refresh_tokens (user_id, token, expires_at)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id) DO UPDATE SET token = $2, expires_at = $3`// One token per user for simplicity
+
+		_, err := r.db.ExecContext(ctx, query, userId, token, expiresAt)
+		return err
+}
+
+// Get the refresh token
+func (r *postgresUserRepository) GetRefreshToken(ctx context.Context, token string)(*models.RefreshToken, error){
+query := `SELECT id, user_id, token, expires_at, created_at 
+              FROM auth_schema.refresh_tokens 
+              WHERE token = $1`
+
+    rt := &models.RefreshToken{}
+    err := r.db.QueryRowContext(ctx, query, token).Scan(
+        &rt.ID,
+        &rt.UserID,
+        &rt.Token,
+        &rt.ExpiresAt,
+        &rt.CreatedAt,
+    )
+	
+	if err != nil {
+		return nil, err
+	}
+
+	return rt, nil
+}
+
+//Delete Refersh Token from database
+func (r *postgresUserRepository) DeleteRefreshToken(ctx context.Context, token string) error{
+	query := `DELETE FROM auth_schema.refresh_tokens WHERE token = $1`
+
+	result, err := r.db.ExecContext(ctx, query, token)
+	if err != nil {
+		return err
+	}
+
+	//Check if something was actually deleted
+	rows, _ := result.RowsAffected()
+	if rows == 0{
+		return errors.New("refresh token not found")
 	}
 
 	return nil
