@@ -227,7 +227,7 @@ func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 // GetAllUsers godoc
 // @Summary      Get all users (Admin only)
 // @Description  Retrieves a list of all registered users. Accessible only by admin users.
-// @Tags         auth
+// @Tags         admin
 // @Accept       json
 // @Produce      json
 // @Security     ApiKeyAuth

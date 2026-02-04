@@ -192,7 +192,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get all users (Admin only)
       tags:
-      - auth
+      - admin
   /auth/forgot-password:
     post:
       consumes:

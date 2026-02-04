@@ -66,7 +66,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "admin"
                 ],
                 "summary": "Get all users (Admin only)",
                 "responses": {
