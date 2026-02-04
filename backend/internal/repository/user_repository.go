@@ -25,6 +25,7 @@ type UserRepository interface{
 	SaveRefreshToken(ctx context.Context, userId, token string, expiresAt time.Time) (error)
 	GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error)
 	DeleteRefreshToken(ctx context.Context, token string) (error)
+	UpdateUserStatus(ctx context.Context, userID string, status string) (error)
 }
 
 //postgresUserRepository is the Postgres implementation of UserRepository
@@ -267,7 +268,7 @@ query := `SELECT id, user_id, token, expires_at, created_at
         &rt.ExpiresAt,
         &rt.CreatedAt,
     )
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -288,6 +289,23 @@ func (r *postgresUserRepository) DeleteRefreshToken(ctx context.Context, token s
 	rows, _ := result.RowsAffected()
 	if rows == 0{
 		return errors.New("refresh token not found")
+	}
+
+	return nil
+}
+
+// Update users status
+func (r *postgresUserRepository) UpdateUserStatus(ctx context.Context, userID string, status string) error{
+	query := `UPDATE auth_schema.users SET status = $1, updated_at = NOW() WHERE id = $2`
+
+	result, err := r.db.ExecContext(ctx, query, userID, status)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0{
+		return errors.New("user not found")
 	}
 
 	return nil

@@ -436,3 +436,29 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		"access_token": newAccessToken,
 	})
 }
+
+type UpdateStatusRequest struct {
+    UserID string `json:"user_id" validate:"required"`
+    Status string `json:"status" validate:"required"`
+}
+
+// UpdateUserStatus godoc
+// @Summary      Update user status (Admin only)
+// @Description  Allows an admin to activate or deactivate a user account.
+// @Tags         admin
+// @Security     ApiKeyAuth
+// @Param        request  body      UpdateStatusRequest  true  "Status Details"
+// @Success      200      {object}  map[string]string
+// @Router       /auth/admin/user-status [put]
+func (h *AuthHandler) UpdateUserStatus(w http.ResponseWriter, r *http.Request){
+	var req UpdateStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+	}
+
+	if err := h.svc.UpdateUserStatus(r.Context(), req.UserID, req.Status); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "User status updated to " + req.Status})
+}

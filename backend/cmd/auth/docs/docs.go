@@ -15,6 +15,42 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/admin/user-status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Allows an admin to activate or deactivate a user account.",
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update user status (Admin only)",
+                "parameters": [
+                    {
+                        "description": "Status Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/admin/users": {
             "get": {
                 "security": [
@@ -648,6 +684,21 @@ const docTemplate = `{
             ],
             "properties": {
                 "new_email": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UpdateStatusRequest": {
+            "type": "object",
+            "required": [
+                "status",
+                "user_id"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

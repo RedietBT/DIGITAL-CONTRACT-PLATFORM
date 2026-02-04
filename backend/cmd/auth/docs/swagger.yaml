@@ -83,6 +83,16 @@ definitions:
     required:
     - new_email
     type: object
+  handler.UpdateStatusRequest:
+    properties:
+      status:
+        type: string
+      user_id:
+        type: string
+    required:
+    - status
+    - user_id
+    type: object
   models.User:
     properties:
       created_at:
@@ -107,6 +117,28 @@ info:
   title: Digital Contract Platform API
   version: "1.0"
 paths:
+  /auth/admin/user-status:
+    put:
+      description: Allows an admin to activate or deactivate a user account.
+      parameters:
+      - description: Status Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateStatusRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update user status (Admin only)
+      tags:
+      - admin
   /auth/admin/users:
     delete:
       consumes:

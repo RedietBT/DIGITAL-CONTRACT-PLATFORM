@@ -26,6 +26,7 @@ type AuthService interface{
 	UpdateEmail(ctx context.Context, UserID string, newEmail string) (error)
 	ChangePassword(ctx context.Context, userID, oldpassword, newpassword string) (error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
+	UpdateUserStatus(ctx context.Context, userID string, newStatus string) (error)
 }
 
 type authService struct {
@@ -298,4 +299,16 @@ func(s *authService) RefreshAccessToken(ctx context.Context, refreshToken string
 
 	// 5. Generate and return the new short_lived Access Token
 	return s.generateToken(user)
+}
+
+// Update user Status
+func (s *authService) UpdateUserStatus(ctx context.Context, userID string, newStatus string) error {
+	// 1. Validate status types
+	validStatuses := map[string]bool{"active": true, "suspended": true, "deactivated": true}
+	if !validStatuses[newStatus]{
+		return errors.New("invalid status type")
+	}
+
+	// 2. Call repository
+	return s.repo.UpdateUserStatus(ctx, userID, newStatus)
 }

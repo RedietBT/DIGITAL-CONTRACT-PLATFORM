@@ -89,6 +89,9 @@ func main() {
 	// Publicly accessible, but requires a valid Refresh Token in the body
 	http.HandleFunc("/auth/refresh", h.Refresh)
 
+	// Update user status only for admin
+	http.Handle("/auth/admin/user-status", middleware.AuthMiddleware(jwtSecret)(middleware.RoleMiddleware("admin", svc)(http.HandlerFunc(h.UpdateUserStatus))))
+
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(
     httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // Force the URL
