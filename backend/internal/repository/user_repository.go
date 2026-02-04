@@ -21,6 +21,7 @@ type UserRepository interface{
 	UpdateLastLogin(ctx context.Context, userID string) (error)
 	GetAllUsers(ctx context.Context) ([]*models.User ,error)
 	DeleteUser(ctx context.Context, UserID string) (error)
+	UpdateEmail(ctx context.Context, UserID string, newEmail string) (error)
 
 }
 
@@ -206,6 +207,25 @@ func (r *postgresUserRepository) DeleteUser(ctx context.Context, UserID string) 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		return errors.New("no user with that ID")
+	}
+
+	return nil
+}
+
+//Update users Email by ID
+func (r *postgresUserRepository) UpdateEmail(ctx context.Context, UsrID string, newEmail string) error {
+	query := `UPDATE auth_schema.users 
+        SET email = $1, updated_at = NOW() 
+        WHERE id = $2`
+
+	result, err := r.db.ExecContext(ctx, query, newEmail, UsrID)
+	if err != nil{
+		return  err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0{
+		return errors.New("user not found")
 	}
 
 	return nil

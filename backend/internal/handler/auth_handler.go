@@ -125,13 +125,13 @@ type ForgotPasswordRequest struct{
 // @Summary      Forgot Password
 // @Description  Initiate password reset process by sending a reset link to the user's email.
 // @Tags         auth
-//@Accept       json
-//@Produce      json
-//@Param        request body      ForgotPasswordRequest  true  "Forgot Password Info"
-//@Success      200     {string}  string "If the email exists, a reset code has been sent."
+//@Accept        json
+//@Produce       json
+//@Param         request body      ForgotPasswordRequest  true  "Forgot Password Info"
+//@Success       200     {string}  string "If the email exists, a reset code has been sent."
 // @Failure      400     {string}  string "Invalid Request"
 // @Failure      500     {string}  string "Internal Server Error"
-//@Router       /auth/forgot-password [post]
+//@Router        /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
 	var req ForgotPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
@@ -301,4 +301,45 @@ func (h *AuthHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 // @Router       /auth/me [delete]
 func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request){
 	h.DeleteUser(w, r)
+}
+
+type UpdateEmailRequest struct{
+		NewEmail string `json:"new_email" validate:"required,email"`
+	}
+
+// UpdateEmail godoc
+// @Summary      Update own Email
+// @Description  Updates the email address of the currently authenticated user.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        request  body      UpdateEmailRequest  true  "New Email Details"
+// @Success      200      {object}  map[string]string   "{"message": "Email updated successfully"}"
+// @Failure      400      {string}  string              "ID required"
+// @Failure      401      {string}  string              "Unauthorized"
+// @Router       /auth/me/email [put]
+func (h *AuthHandler) UpdateEmail(w http.ResponseWriter, r *http.Request){
+	// 1. Pull UserID out of the context (set by middleware)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Could not find user in context", http.StatusUnauthorized)
+		return
+	}
+
+	// 2. Decode the request body
+	var req UpdateEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Call the service
+	if err := h.svc.UpdateEmail(r.Context(), userID, req.NewEmail); err != nil{
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Email updaated successfully"})
 }

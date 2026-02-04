@@ -23,6 +23,7 @@ type AuthService interface{
 	GetUserByID(ctx context.Context, UserID string) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]*models.User, error)
 	DeleteUser(ctx context.Context, UserID string) (error) 
+	UpdateEmail(ctx context.Context, UserID string, newEmail string) (error)
 }
 
 type authService struct {
@@ -192,4 +193,19 @@ func (s *authService) DeleteUser(ctx context.Context, UserID string) error {
 	}
 
 	return nil
+}
+
+func (s *authService) UpdateEmail(ctx context.Context, UserID string, newEmail string) error{
+	
+	// 1. Update Users Email
+	existingUser, err := s.repo.GetByEmail(ctx, newEmail)
+	if err == nil && existingUser != nil{
+		// If weq found a user with this email, and its's not the current user
+		if existingUser.ID != UserID {
+			return errors.New("Failed to Update user Email")
+		}	
+	}
+
+	// 2. Call the repository to update
+	return s.repo.UpdateEmail(ctx, UserID, newEmail)
 }

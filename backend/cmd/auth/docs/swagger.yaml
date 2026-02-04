@@ -58,6 +58,13 @@ definitions:
     - new_password
     - token
     type: object
+  handler.UpdateEmailRequest:
+    properties:
+      new_email:
+        type: string
+    required:
+    - new_email
+    type: object
   models.User:
     properties:
       created_at:
@@ -250,6 +257,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user profile
+      tags:
+      - auth
+  /auth/me/email:
+    put:
+      consumes:
+      - application/json
+      description: Updates the email address of the currently authenticated user.
+      parameters:
+      - description: New Email Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"message": "Email updated successfully"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ID required
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update own Email
       tags:
       - auth
   /auth/register:

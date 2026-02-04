@@ -80,6 +80,9 @@ func main() {
 	//Admin deletes anyone (Auth + Admin Role)
 	http.Handle("/auth/admin/users/delete", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.DeleteUser)))
 
+	//Update Email route
+	http.Handle("/auth/me/email", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.UpdateEmail)))
+
 	//Swagger UI Route
 	http.Handle("/swagger/", httpSwagger.Handler(
     httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // Force the URL
