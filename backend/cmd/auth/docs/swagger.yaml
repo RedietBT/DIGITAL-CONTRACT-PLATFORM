@@ -281,7 +281,7 @@ paths:
               type: string
             type: object
         "400":
-          description: ID required
+          description: Invalid request body
           schema:
             type: string
         "401":
@@ -290,7 +290,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: Update own Email
+      summary: Update own email
       tags:
       - auth
   /auth/register:

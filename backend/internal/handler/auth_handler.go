@@ -308,7 +308,7 @@ type UpdateEmailRequest struct{
 	}
 
 // UpdateEmail godoc
-// @Summary      Update own Email
+// @Summary      Update own email
 // @Description  Updates the email address of the currently authenticated user.
 // @Tags         auth
 // @Accept       json
@@ -316,7 +316,7 @@ type UpdateEmailRequest struct{
 // @Security     ApiKeyAuth
 // @Param        request  body      UpdateEmailRequest  true  "New Email Details"
 // @Success      200      {object}  map[string]string   "{"message": "Email updated successfully"}"
-// @Failure      400      {string}  string              "ID required"
+// @Failure      400      {string}  string              "Invalid request body"
 // @Failure      401      {string}  string              "Unauthorized"
 // @Router       /auth/me/email [put]
 func (h *AuthHandler) UpdateEmail(w http.ResponseWriter, r *http.Request){

@@ -295,7 +295,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Update own Email",
+                "summary": "Update own email",
                 "parameters": [
                     {
                         "description": "New Email Details",
@@ -318,7 +318,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "ID required",
+                        "description": "Invalid request body",
                         "schema": {
                             "type": "string"
                         }
