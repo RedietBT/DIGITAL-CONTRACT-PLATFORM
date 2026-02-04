@@ -110,10 +110,20 @@ func (r *postgresUserRepository) DeleteResetToken(ctx context.Context, email str
 }
 
 //UpdatePassword updates the password hash for a given email
-func (r *postgresUserRepository) UpdatePassword(ctx context.Context, email, hashedPassword string) error {
-    query := `UPDATE auth_schema.users SET password_hash = $1 WHERE email = $2`
-    _, err := r.db.ExecContext(ctx, query, hashedPassword, email)
-    return err
+func (r *postgresUserRepository) UpdatePassword(ctx context.Context, UserID, hashedPassword string) error {
+    query := `UPDATE auth_schema.users SET password_hash = $1 WHERE id = $2`
+    
+	result, err := r.db.ExecContext(ctx, query, hashedPassword, UserID)
+	if err != nil{
+		return err
+	}
+
+	rowAffected, _ := result.RowsAffected()
+	if rowAffected == 0{
+		return errors.New("user not found")
+	}
+
+	return nil
 }
 
 //GetByID retrieves a user by their unique ID

@@ -343,3 +343,39 @@ func (h *AuthHandler) UpdateEmail(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Email updaated successfully"})
 }
+
+type ChangePasswordRequest struct{
+	OldPassword string `json:"old_password" validate:"required"`
+    NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+
+// ChangePassword godoc
+// @Summary      Change own password
+// @Description  Allows the user to update their password after verifying their old one.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        request  body      ChangePasswordRequest  true  "Password Details"
+// @Success      200      {object}  map[string]string      "Password changed successfully"
+// @Failure      400      {string}  string                 "Incorrect current password"
+// @Router       /auth/me/password [put]
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	// 1. Pull UserID out of the context (set by middleware)
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
+	var req ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return 
+	}
+
+	if err := h.svc.ChangePassword(r.Context(), userID, req.OldPassword, req.NewPassword); err != nil{
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return 
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Password updated successfully"})
+	
+}

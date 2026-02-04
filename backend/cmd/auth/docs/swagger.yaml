@@ -1,5 +1,16 @@
 basePath: /
 definitions:
+  handler.ChangePasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   handler.ForgotPasswordRequest:
     properties:
       email:
@@ -291,6 +302,37 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update own email
+      tags:
+      - auth
+  /auth/me/password:
+    put:
+      consumes:
+      - application/json
+      description: Allows the user to update their password after verifying their
+        old one.
+      parameters:
+      - description: Password Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Incorrect current password
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Change own password
       tags:
       - auth
   /auth/register:

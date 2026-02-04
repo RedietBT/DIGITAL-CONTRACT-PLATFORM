@@ -24,6 +24,7 @@ type AuthService interface{
 	GetAllUsers(ctx context.Context) ([]*models.User, error)
 	DeleteUser(ctx context.Context, UserID string) (error) 
 	UpdateEmail(ctx context.Context, UserID string, newEmail string) (error)
+	ChangePassword(ctx context.Context, userID, oldpassword, newpassword string) (error)
 }
 
 type authService struct {
@@ -147,6 +148,12 @@ func (s *authService) ResetPassword(ctx context.Context, email, token, newPasswo
         return errors.New("invalid token")
     }
 
+	//Get the User by Email to find their ID
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err != nil{
+		return errors.New("user no longer exists")
+	}
+
 	// 4. Hash the new password
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
     if err != nil {
@@ -154,7 +161,7 @@ func (s *authService) ResetPassword(ctx context.Context, email, token, newPasswo
     }
 
 	// 5. Update user password in DB (You might need to add UpdatePassword to your repo)
-    err = s.repo.UpdatePassword(ctx, email, string(hashedPassword))
+    err = s.repo.UpdatePassword(ctx, user.ID, string(hashedPassword))
     if err != nil {
         return err
     }
@@ -208,4 +215,28 @@ func (s *authService) UpdateEmail(ctx context.Context, UserID string, newEmail s
 
 	// 2. Call the repository to update
 	return s.repo.UpdateEmail(ctx, UserID, newEmail)
+}
+
+func (s *authService) ChangePassword(ctx context.Context, userID, oldpassword, newpassword string) error {
+	// 1. Fetch the user to get the CURRENT hash
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	// 2. Compare the "oldPassword" provided by the user with the hash in DB
+	// We reuse existing Bcrypt comparison logic
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldpassword))
+	if err != nil {
+		return errors.New("current password is incorrect")
+	}
+
+	//Hash the NEW password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newpassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// 4. Update the DB
+	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
 }
