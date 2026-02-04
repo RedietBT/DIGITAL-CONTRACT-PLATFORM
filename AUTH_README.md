@@ -82,3 +82,72 @@ View Users:
 docker exec -it deployments-db-1 psql -U postgres -d digital_contract_db -c "SELECT email, password_hash FROM auth_schema.users;"
 ```
 ---
+It is the perfect time to update your documentation. Your README is currently a "User-facing" guide, so we need to add the **Admin Features** and the **Account Management** (Me) section. This helps anyone else (or future you) understand how the RBAC (Role-Based Access Control) works.
+
+Here is the markdown block you can append to your existing `README.md`:
+
+---
+
+### 🛡️ Role-Based Access Control (RBAC)
+
+The service distinguishes between regular `users` and `admins`. Roles are enforced via the `RoleMiddleware`.
+
+* **To Promote a User to Admin (SQL):**
+
+```sql
+UPDATE auth_schema.users SET role = 'admin' WHERE email = 'your@email.com';
+
+```
+
+### 👤 User Account Management ("Me" Routes)
+
+These endpoints allow users to manage their own data. They require a valid JWT in the `Authorization: Bearer <token>` header.
+
+| Endpoint | Method | Description |
+| --- | --- | --- |
+| `/auth/me` | `GET` | Returns the current user's profile info. |
+| `/auth/me/email` | `PUT` | Updates the user's email address (Checks for uniqueness). |
+| `/auth/me/password` | `PUT` | Changes password (Requires `old_password` verification). |
+| `/auth/me` | `DELETE` | Allows a user to delete their own account. |
+
+### 🔑 Admin Management
+
+Endpoints restricted to users with the `admin` role.
+
+* **List All Users**: `GET /auth/admin/users`
+* Returns a full list of registered users (excluding password hashes).
+
+
+* **Delete Any User**: `DELETE /auth/admin/users?id=<uuid>`
+* Forcefully removes a user account from the system.
+
+
+
+---
+
+### 🚦 Middleware Architecture
+
+The service uses a "Chained Middleware" pattern to secure routes:
+
+1. **LoggerMiddleware**: Tracks every incoming request.
+2. **AuthMiddleware**: Extracts and validates the JWT. Injects `UserID` and `Role` into the Request Context.
+3. **RoleMiddleware**: Checks the context for specific permissions (e.g., `admin`) before allowing the request to hit the handler.
+
+### 🏗️ Database Schema: Extended
+
+We have two primary tables in the `auth_schema`:
+
+* `users`: Stores core identity (ID, Email, Role, Password Hash).
+* `password_resets`: Temporary storage for recovery tokens (Linked via Email with `ON DELETE CASCADE`).
+
+---
+
+### 🧼 Code Quality & Clean Architecture
+
+The project follows the **Repository -> Service -> Handler** pattern:
+
+* **Repository**: Pure SQL logic via `database/sql`.
+* **Service**: Business logic (hashing, uniqueness checks, token validation).
+* **Handler**: HTTP protocol handling (JSON parsing, status codes).
+
+---
