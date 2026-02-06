@@ -18,6 +18,21 @@ services:
       - "1025:1025" # SMTP server
       - "8025:8025" # Web UI (Dashboard)
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # Protocol port for Go code
+      - "15672:15672" # Dashboard for you
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   auth-service:
     build:
       context: ../backend
@@ -29,9 +44,12 @@ services:
       - JWT_SECRET=super-secret-production-key-change-me
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
-      - db
-      - mailhog
+      db:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy 
     ports:
       - "8080:8080"
 
