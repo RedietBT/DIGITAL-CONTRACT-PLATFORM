@@ -10,6 +10,7 @@ import (
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/email"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,14 +32,16 @@ type AuthService interface{
 
 type authService struct {
 	repo repository.UserRepository
+	broker *broker.RabbitMQProvider
 	jwtSecret string
 }
 
 //NewAuthService creates a new instance of AuthService with the provided UserRepository.
 //This is our "Constructor" for Dependency Injection.
-func NewAuthService(repo repository.UserRepository, secret string) AuthService{
+func NewAuthService(repo repository.UserRepository, broker *broker.RabbitMQProvider, secret string) AuthService{
 	return  &authService{
 		repo: repo,
+		broker: broker,
 		jwtSecret: secret,
 	}
 }
@@ -66,7 +69,14 @@ func(s *authService) Register(ctx context.Context, email, password string)(*mode
 	}
 
 	err = s.repo.Create(ctx, user)
-	return user, err
+
+	// ✨ ADD THIS: Tell RabbitMQ a user was created!
+    if s.broker != nil {
+        // We broadcast the ID and Email so the Profile Service can store them
+        _ = s.broker.PublishUserCreated(ctx, user.ID, user.Email) 
+    }
+
+	return user, nil
 }
 
 //Login authenticates a user and returns a JWT token upon successful login.

@@ -9,7 +9,7 @@ import (
 
 type RabbitMQProvider struct {
 	conn *amqp.Connection // The physical cable connecting your app to RabbitMQ
-	channel *amqp.channel // A "virtual" connection inside the cable (efficient for many tasks)
+	channel *amqp.Channel // A "virtual" connection inside the cable (efficient for many tasks)
 }
 
 // NewRabbitMQProvider connects to the broker and declares the Exchange

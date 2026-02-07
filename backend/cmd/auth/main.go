@@ -11,6 +11,7 @@ import (
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -47,17 +48,29 @@ func main() {
 		log.Fatalf("❌ Failed to run migrations: %v", err)
 	}
 
-
 	//1. Initiatize Repositories
 	repo := repository.NewPostgresUserRepository(db)
 
-	//2. Initiatize Services( Inject Repo)
-	svc := service.NewAuthService(repo, jwtSecret)
+	// 2. Get the URL from the environment
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL == ""{
+		rabbitURL = "amqp://guest:guest@rabbitmq:5672/"
+	}
 
-	//3. Initiatize Handlers( Inject Services)
+	// 3. Initalize the broker (this is what creates the Exchange!)
+	brokerProv, err := broker.NewRabbitMQProvider(rabbitURL)
+	if err != nil {
+		log.Fatalf("Could not connect to RabbitMQ: %v", err)
+	}
+	defer brokerProv.Close()
+
+	// 4. Pass it to the seervice
+	svc := service.NewAuthService(repo, brokerProv, jwtSecret)
+
+	// 5. Initiatize Handlers( Inject Services)
 	h := handler.NewAuthHandler(svc)
 
-	//4. Setup Routes
+	// 6. Setup Routes
 	// Public routes
 	http.HandleFunc("/auth/register", h.Register)
 	http.HandleFunc("/auth/login", h.Login)
