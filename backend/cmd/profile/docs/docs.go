@@ -271,7 +271,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Logout user",
                 "responses": {
@@ -308,7 +308,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Get user profile",
                 "responses": {
@@ -363,7 +363,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Update own email",
                 "parameters": [
@@ -478,7 +478,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Refresh access token",
                 "parameters": [
@@ -585,7 +585,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Reset password using token",
                 "parameters": [

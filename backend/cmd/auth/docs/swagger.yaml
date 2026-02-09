@@ -308,7 +308,7 @@ paths:
       - ApiKeyAuth: []
       summary: Logout user
       tags:
-      - auth
+      - default
   /auth/me:
     get:
       description: Retrieves the profile information of the authenticated user.
@@ -341,7 +341,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get user profile
       tags:
-      - auth
+      - default
   /auth/me/email:
     put:
       consumes:
@@ -379,7 +379,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update own email
       tags:
-      - auth
+      - default
   /auth/me/password:
     put:
       consumes:
@@ -453,7 +453,7 @@ paths:
             type: object
       summary: Refresh access token
       tags:
-      - auth
+      - default
   /auth/register:
     post:
       consumes:
@@ -524,7 +524,7 @@ paths:
             type: object
       summary: Reset password using token
       tags:
-      - auth
+      - default
   /profile/me:
     get:
       description: Fetches the profile for the user identified by the JWT token.

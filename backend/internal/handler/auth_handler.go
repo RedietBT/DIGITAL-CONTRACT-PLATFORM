@@ -138,7 +138,7 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 // ResetPassword godoc
 // @Summary      Reset password using token
 // @Description  Resets the user's password using a verification token.
-// @Tags         auth
+// @Tags         default
 // @Accept       json
 // @Produce      json
 // @Param        request  body      ResetPasswordRequest  true  "Reset Password Details"
@@ -164,7 +164,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 // GetProfile godoc
 // @Summary      Get user profile
 // @Description  Retrieves the profile information of the authenticated user.
-// @Tags         auth
+// @Tags         default
 // @Security     ApiKeyAuth
 // @Produce      json
 // @Success      200  {object}  models.User "Successfully retrieved user profile"
@@ -240,7 +240,7 @@ func (h *AuthHandler) DeleteMe(c *gin.Context) {
 // UpdateEmail godoc
 // @Summary      Update own email
 // @Description  Updates the email address of the authenticated user.
-// @Tags         auth
+// @Tags         default
 // @Security     ApiKeyAuth
 // @Accept       json
 // @Produce      json
@@ -296,7 +296,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 // Logout godoc
 // @Summary      Logout user
 // @Description  Logs out the authenticated user by invalidating the current session.
-// @Tags         auth
+// @Tags         default
 // @Security     ApiKeyAuth
 // @Produce      json
 // @Success      200  {object}  map[string]string "Success message"
@@ -309,7 +309,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // Refresh godoc
 // @Summary      Refresh access token
 // @Description  Refreshes the access token using a valid refresh token.
-// @Tags         auth
+// @Tags         default
 // @Accept       json
 // @Produce      json
 // @Param        request  body      RefreshRequest  true  "Refresh Token"

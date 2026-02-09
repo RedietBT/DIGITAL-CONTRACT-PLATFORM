@@ -265,7 +265,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Logout user",
                 "responses": {
@@ -302,7 +302,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Get user profile",
                 "responses": {
@@ -357,7 +357,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Update own email",
                 "parameters": [
@@ -472,7 +472,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Refresh access token",
                 "parameters": [
@@ -579,7 +579,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "default"
                 ],
                 "summary": "Reset password using token",
                 "parameters": [
