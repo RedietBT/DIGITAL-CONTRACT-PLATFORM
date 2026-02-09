@@ -69,8 +69,10 @@ func main() {
 	
 	// Start listining in a background goroutine
 	profileConsumer.Start()
-	log.Println("❌ Failed to create consumer: %v", err)
-
+	if err != nil {
+		log.Fatalf("❌ Failed to start profile consumer: %v", err)
+	}
+	
 	// Gin Engine Setup
 	r := gin.Default()
 
