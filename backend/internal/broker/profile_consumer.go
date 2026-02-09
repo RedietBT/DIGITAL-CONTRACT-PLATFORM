@@ -32,9 +32,9 @@ func NewProfileConsumer(conn *amqp.Connection, handler UserEventHandler) (*Profi
 }
 
 // Start now contains the merged logic for both Create and Delete
-func (c *ProfileConsumer) Start() {
+func (c *ProfileConsumer) Start() error {
 	// 1. Declare Exchange (Fanout)
-	_ = c.channel.ExchangeDeclare(
+	err := c.channel.ExchangeDeclare(
 		"user_events",
 		"fanout",
 		true,
@@ -43,9 +43,12 @@ func (c *ProfileConsumer) Start() {
 		false,
 		nil,
 	)
+	if err != nil {
+		return err
+	}
 
 	// 2. Declare Queue
-	q, _ := c.channel.QueueDeclare(
+	q, err := c.channel.QueueDeclare(
 		"profile_creation_queue",
 		true,
 		false,
@@ -53,12 +56,21 @@ func (c *ProfileConsumer) Start() {
 		false,
 		nil,
 	)
+	if err != nil {
+		return err
+	}
 
 	// 3. Bind Queue to Exchange
-	_ = c.channel.QueueBind(q.Name, "", "user_events", false, nil)
+	err = c.channel.QueueBind(q.Name, "", "user_events", false, nil)
+	if err != nil {
+		return err
+	}
 
 	// 4. Start Consuming
-	msgs, _ := c.channel.Consume(q.Name, "", true, false, false, false, nil)
+	msgs, err := c.channel.Consume(q.Name, "", true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
 
 	go func() {
 		for d := range msgs {
@@ -84,4 +96,6 @@ func (c *ProfileConsumer) Start() {
 			}
 		}
 	}()
+
+	return nil
 }

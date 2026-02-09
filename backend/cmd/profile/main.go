@@ -64,14 +64,14 @@ func main() {
 	// We pass 'profilerSvc' because it implements the UserEventHandler interface
 	profileConsumer, err := broker.NewProfileConsumer(conn, svc)
 	if err != nil {
-		log.Fatalf("❌ Failed to create profile consumer: %v", err)
-	}
+    log.Fatalf("❌ Failed to create profile consumer: %v", err)
+    }
 	
 	// Start listining in a background goroutine
-	profileConsumer.Start()
+	err = profileConsumer.Start() 
 	if err != nil {
-		log.Fatalf("❌ Failed to start profile consumer: %v", err)
-	}
+    log.Fatalf("❌ Failed to start profile consumer: %v", err)
+    }
 	
 	// Gin Engine Setup
 	r := gin.Default()
