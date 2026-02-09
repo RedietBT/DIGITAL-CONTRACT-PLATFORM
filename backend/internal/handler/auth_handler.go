@@ -56,16 +56,16 @@ type UpdateStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
 
-// --- Handlers ---
-
 // Register godoc
 // @Summary      Register a new user
-// @Description  Create a new user account and returns the user object.
+// @Description  Creates a new user account in the auth service and broadcasts a creation event via RabbitMQ.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request body      RegisterRequest  true  "Registration Info"
-// @Success      201     {object}  models.User
+// @Param        request  body      RegisterRequest  true  "User Registration Details"
+// @Success      201      {object}  models.User      "Successfully created user"
+// @Failure      400      {object}  map[string]string "Invalid input data"
+// @Failure      500      {object}  map[string]string "Internal server error"
 // @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
@@ -84,12 +84,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Login godoc
-// @Summary      User login
+// @Summary      Authenticate a user
+// @Description  Verifies credentials and returns access and refresh tokens.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request body      LoginRequest  true  "Login Info"
-// @Success      200     {object}  map[string]string
+// @Param        credentials  body      LoginRequest  true  "User Credentials"
+// @Success      200          {object}  map[string]string "Returns access_token and refresh_token"
+// @Failure      400          {object}  map[string]string "Invalid input format"
+// @Failure      401          {object}  map[string]string "Unauthorized: Invalid email or password"
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
@@ -112,7 +115,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 // ForgotPassword godoc
 // @Summary      Forgot Password
+// @Description  Initiates the password reset process by sending a reset code to the user's email.
 // @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      ForgotPasswordRequest  true  "User Email"
+// @Success      200      {object}  map[string]string      "Success message"
+// @Failure      400      {object}  map[string]string      "Invalid email format"
+// @Failure      500      {object}  map[string]string      "Failed to send reset code"
 // @Router       /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req ForgotPasswordRequest
@@ -127,7 +137,14 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 
 // ResetPassword godoc
 // @Summary      Reset password using token
+// @Description  Resets the user's password using a verification token.
 // @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      ResetPasswordRequest  true  "Reset Password Details"
+// @Success      200      {object}  map[string]string      "Success message"
+// @Failure      400      {object}  map[string]string      "Invalid token or password mismatch"
+// @Failure      500      {object}  map[string]string      "Failed to reset password"
 // @Router       /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
@@ -146,7 +163,14 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 
 // GetProfile godoc
 // @Summary      Get user profile
+// @Description  Retrieves the profile information of the authenticated user.
+// @Tags         auth
 // @Security     ApiKeyAuth
+// @Produce      json
+// @Success      200  {object}  models.User "Successfully retrieved user profile"
+// @Failure      401  {object}  map[string]string "Unauthorized: User not found in context"
+// @Failure      404  {object}  map[string]string "User not found"
+// @Failure      500  {object}  map[string]string "Internal server error"
 // @Router       /auth/me [get]
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDKey)
@@ -166,8 +190,12 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 
 // GetAllUsers godoc
 // @Summary      Get all users (Admin only)
+// @Description  Retrieves a list of all users in the system. Requires admin privileges.
 // @Tags         admin
 // @Security     ApiKeyAuth
+// @Produce      json
+// @Success      200  {array}  models.User "Successfully retrieved list of users"
+// @Failure      500  {object}  map[string]string "Failed to retrieve users"
 // @Router       /auth/admin/users [get]
 func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.svc.GetAllUsers(c.Request.Context())
@@ -180,8 +208,13 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 
 // DeleteUser godoc
 // @Summary      Delete a user
+// @Description  Deletes a user account. If no ID is provided, deletes the authenticated user.
 // @Tags         admin
 // @Security     ApiKeyAuth
+// @Produce      json
+// @Param        id  query     string  false  "User ID to delete"
+// @Success      204 {object}  nil       "Successfully deleted user"
+// @Failure      500 {object}  map[string]string "Failed to delete user"
 // @Router       /auth/admin/users [delete]
 func (h *AuthHandler) DeleteUser(c *gin.Context) {
 	currentUserID := c.GetString(middleware.UserIDKey)
@@ -206,7 +239,15 @@ func (h *AuthHandler) DeleteMe(c *gin.Context) {
 
 // UpdateEmail godoc
 // @Summary      Update own email
+// @Description  Updates the email address of the authenticated user.
+// @Tags         auth
 // @Security     ApiKeyAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      UpdateEmailRequest  true  "New Email Address"
+// @Success      200      {object}  map[string]string   "Success message"
+// @Failure      400      {object}  map[string]string   "Invalid email format"
+// @Failure      500      {object}  map[string]string   "Failed to update email"
 // @Router       /auth/me/email [put]
 func (h *AuthHandler) UpdateEmail(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDKey)
@@ -226,7 +267,15 @@ func (h *AuthHandler) UpdateEmail(c *gin.Context) {
 
 // ChangePassword godoc
 // @Summary      Change own password
+// @Description  Updates the password of the authenticated user.
+// @Tags         auth
 // @Security     ApiKeyAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      ChangePasswordRequest  true  "Old and New Passwords"
+// @Success      200      {object}  map[string]string   "Success message"
+// @Failure      400      {object}  map[string]string   "Invalid password or mismatch"
+// @Failure      500      {object}  map[string]string   "Failed to change password"
 // @Router       /auth/me/password [put]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDKey)
@@ -246,6 +295,12 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 // Logout godoc
 // @Summary      Logout user
+// @Description  Logs out the authenticated user by invalidating the current session.
+// @Tags         auth
+// @Security     ApiKeyAuth
+// @Produce      json
+// @Success      200  {object}  map[string]string "Success message"
+// @Failure      500  {object}  map[string]string "Failed to logout"
 // @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
@@ -253,6 +308,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 // Refresh godoc
 // @Summary      Refresh access token
+// @Description  Refreshes the access token using a valid refresh token.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      RefreshRequest  true  "Refresh Token"
+// @Success      200      {object}  map[string]string   "New access token"
+// @Failure      400      {object}  map[string]string   "Invalid request"
+// @Failure      401      {object}  map[string]string   "Unauthorized: Invalid refresh token"
 // @Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
@@ -272,8 +335,15 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 // UpdateUserStatus godoc
 // @Summary      Update user status (Admin only)
+// @Description  Updates the status of a specific user. Requires admin privileges.
 // @Tags         admin
 // @Security     ApiKeyAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      UpdateStatusRequest  true  "User ID and New Status"
+// @Success      200      {object}  map[string]string   "Success message"
+// @Failure      400      {object}  map[string]string   "Invalid status value"
+// @Failure      500      {object}  map[string]string   "Failed to update user status"
 // @Router       /auth/admin/user-status [put]
 func (h *AuthHandler) UpdateUserStatus(c *gin.Context) {
 	var req UpdateStatusRequest
