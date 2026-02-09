@@ -66,5 +66,18 @@ services:
     ports:
       - "8081:8080"
 
+  profile-service:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: profile
+    environment: 
+      - DATABASE_DSN=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+    depends_on:
+      - db
+    ports:
+      - "8082:8080"
+
 volumes:
   postgres_data:
