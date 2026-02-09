@@ -22,6 +22,9 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "tags": [
+                    "admin"
+                ],
                 "summary": "Update user status (Admin only)",
                 "responses": {}
             }
@@ -33,6 +36,9 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "tags": [
+                    "admin"
+                ],
                 "summary": "Get all users (Admin only)",
                 "responses": {}
             },
@@ -41,6 +47,9 @@ const docTemplate = `{
                     {
                         "ApiKeyAuth": []
                     }
+                ],
+                "tags": [
+                    "admin"
                 ],
                 "summary": "Delete a user",
                 "responses": {}
@@ -178,6 +187,98 @@ const docTemplate = `{
                 "summary": "Reset password using token",
                 "responses": {}
             }
+        },
+        "/profile/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Fetches the profile for the user identified by the JWT token.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get My Profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Profile"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Allows the user to update their display name, bio, and other details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Update Profile",
+                "parameters": [
+                    {
+                        "description": "Profile data",
+                        "name": "profile",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Profile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -214,6 +315,38 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 8,
                     "example": "secret123"
+                }
+            }
+        },
+        "models.Profile": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "is_template_seller": {
+                    "type": "boolean"
+                },
+                "rating_avg": {
+                    "type": "number"
+                },
+                "rating_count": {
+                    "type": "integer"
+                },
+                "skill_level": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
