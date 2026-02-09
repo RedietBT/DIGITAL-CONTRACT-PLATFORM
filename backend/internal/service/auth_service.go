@@ -245,6 +245,12 @@ func (s *authService) DeleteUser(ctx context.Context, UserID string) error {
 		return errors.New("Failed to Delet user from database")
 	}
 
+	// 3. ✨ NEW: Notify the Profile Service via RabbitMQ
+    if s.broker != nil {
+        // We publish a "UserDeleted" event so the profile_schema.profile table stays synced
+        _ = s.broker.PublishUserDeleted(ctx, UserID) 
+    }
+
 	return nil
 }
 

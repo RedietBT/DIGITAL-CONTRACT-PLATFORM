@@ -2,136 +2,112 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
-	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/auth/docs"
+	"github.com/gin-gonic/gin"
+	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/auth/docs" // Swagger docs
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/handler"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
-	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
-	httpSwagger "github.com/swaggo/http-swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title           Digital Contract Platform API
+// @title           Digital Contract Platform API (Auth)
 // @version         1.0
-// @description     This is the Auth Service for the Digital Contract Platform.
+// @description     Auth Service with RabbitMQ & Gin.
 // @host            localhost:8080
 // @BasePath        /
-
 // @securityDefinitions.apikey ApiKeyAuth
-// @in                         header
-// @name                       Authorization
-// @description                Type "Bearer" followed by a space and JWT token.
+// @in              header
+// @name            Authorization
 func main() {
+	// 1. Env Variables
 	dsn := os.Getenv("DATABASE_DSN")
-	if dsn == "" {
-        log.Fatal("❌ DATABASE_DSN is not set in environment variables")
-    }
-
 	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		log.Fatal("❌ JWT_SECRET is not set in environment variables")
+	if dsn == "" || jwtSecret == "" {
+		log.Fatal("❌ Critical Environment Variables (DSN/JWT) are missing")
 	}
 
-	//Call the function from our internal package
+	// 2. Database Connection & Migration
 	db, err := database.Connect(dsn)
 	if err != nil {
-		log.Fatal("❌ Failed to connect to database: %v", err)
+		log.Fatalf("❌ Database connection failed: %v", err)
 	}
 	defer db.Close()
 
-	//Calling AutoMigrate to ensure the User table is created
-	if err := database.RunMigrations(db); err != nil{
-		log.Fatalf("❌ Failed to run migrations: %v", err)
+	if err := database.RunMigrations(db); err != nil {
+		log.Fatalf("❌ Migration failed: %v", err)
 	}
 
-	//1. Initiatize Repositories
-	repo := repository.NewPostgresUserRepository(db)
-
-	// 2. Get the URL from the environment
+	// 3. RabbitMQ Connection
 	rabbitURL := os.Getenv("RABBITMQ_URL")
-	if rabbitURL == ""{
+	if rabbitURL == "" {
 		rabbitURL = "amqp://guest:guest@rabbitmq:5672/"
 	}
-
-	// 3. Connect to the "Cable" (using the pkg/broker)
 	conn, err := pkgBroker.Connect(rabbitURL)
 	if err != nil {
-		log.Fatalf("Could not connect to RabbitMQ: %v", err)
+		log.Fatalf("❌ RabbitMQ connection failed: %v", err)
 	}
 	defer conn.Close()
 
-	// 4. Initialize the specific Publisher (using internal/broker)
 	authPub, err := broker.NewAuthPublisher(conn)
 	if err != nil {
-		log.Fatalf("Could not connect to RabbitMQ: %v", err)
+		log.Fatalf("❌ Publisher initialization failed: %v", err)
 	}
 
-
-	// 5. Pass it to the seervice
+	// 4. Layers Initialization
+	repo := repository.NewPostgresUserRepository(db)
 	svc := service.NewAuthService(repo, authPub, jwtSecret)
-
-	// 6. Initiatize Handlers( Inject Services)
 	h := handler.NewAuthHandler(svc)
 
-	// 7. Setup Routes
-	// Public routes
-	http.HandleFunc("/auth/register", h.Register)
-	http.HandleFunc("/auth/login", h.Login)
-	http.HandleFunc("/auth/forgot-password", h.ForgotPassword)
-	http.HandleFunc("/auth/reset-password", h.ResetPassword)
+	// 5. Gin Setup
+	r := gin.Default()
 
-	// Protected route (Only accessible with a valid token)
-	protectedProfile := middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.GetProfile))
-	http.Handle("/auth/me", protectedProfile)
-	
-	// We create the "Admin Only" version of the handler
-	// We wrap h.GetAllUsers in RoleMiddleware first
-	adminOnly := middleware.RoleMiddleware("admin", svc)(http.HandlerFunc(h.GetAllUsers))
-	protectedAdmin := middleware.AuthMiddleware(jwtSecret)(adminOnly)
-	http.Handle("/auth/admin/users", protectedAdmin)
-	
-	//User Deletes themselves (auth only)
-	http.Handle("/auth/me/delete", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.DeleteMe)))
-
-	//Admin deletes anyone (Auth + Admin Role)
-	http.Handle("/auth/admin/users/delete", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.DeleteUser)))
-
-	//Update Email route
-	http.Handle("/auth/me/email", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.UpdateEmail)))
-
-	//Change password route
-	http.Handle("/auth/me/password", middleware.AuthMiddleware(jwtSecret)(http.HandlerFunc(h.ChangePassword)))
-
-	// Publicly accessible, but requires a valid Refresh Token in the body
-	http.HandleFunc("/auth/refresh", h.Refresh)
-
-	// Update user status only for admin
-	http.Handle("/auth/admin/user-status", middleware.AuthMiddleware(jwtSecret)(middleware.RoleMiddleware("admin", svc)(http.HandlerFunc(h.UpdateUserStatus))))
-
-	//Swagger UI Route
-	http.Handle("/swagger/", httpSwagger.Handler(
-    httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // Force the URL
-	))
-
-	log.Println("✅ Auth Service started successfully!")
-	log.Println("📖 Swagger Docs available at http://localhost:8080/swagger/index.html")
-
-	//Define a simple health check route
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK - Auth Service is alive"))
+	// 6. Swagger & Health
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/health", func(c *gin.Context) {
+		c.String(200, "OK - Auth Service is alive")
 	})
 
-	log.Println("🚀 Auth Service listening on :8080")
-
-	//This rplaces 'select{}' and keeps the app runing
-	if err := http.ListenAndServe(":8080", nil); err != nil{
-		log.Fatalf("❌ Server failed: %v", err)
+	// 7. Route Groups
+	
+	// PUBLIC
+	auth := r.Group("/auth")
+	{
+		auth.POST("/register", h.Register)
+		auth.POST("/login", h.Login)
+		auth.POST("/forgot-password", h.ForgotPassword)
+		auth.POST("/reset-password", h.ResetPassword)
+		auth.POST("/refresh", h.Refresh)
+		auth.POST("/logout", h.Logout)
 	}
 
+	// PROTECTED (Requires Login)
+	me := r.Group("/auth/me")
+	me.Use(middleware.AuthMiddleware(jwtSecret))
+	{
+		me.GET("", h.GetProfile)
+		me.PUT("/email", h.UpdateEmail)
+		me.PUT("/password", h.ChangePassword)
+		me.DELETE("", h.DeleteMe)
+	}
+
+	// ADMIN ONLY (Requires Login + Admin Role)
+	admin := r.Group("/auth/admin")
+	admin.Use(middleware.AuthMiddleware(jwtSecret), middleware.RoleMiddleware("admin", svc))
+	{
+		admin.GET("/users", h.GetAllUsers)
+		admin.DELETE("/users", h.DeleteUser)
+		admin.PUT("/user-status", h.UpdateUserStatus)
+	}
+
+	log.Println("🚀 Auth Service listening on :8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("❌ Server failure: %v", err)
+	}
 }

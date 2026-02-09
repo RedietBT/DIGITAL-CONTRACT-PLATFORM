@@ -1,464 +1,288 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
-	"github.com/go-playground/validator/v10"
+	"github.com/gin-gonic/gin"
 )
 
-var validate = validator.New()
-
-//AuthHandler coordinations HTTP requests from authentication.
-type AuthHandler struct{
+type AuthHandler struct {
 	svc service.AuthService
 }
 
-//NewAuthHandler initalizes the handler with the required service.
-func NewAuthHandler(svc service.AuthService) *AuthHandler{
+func NewAuthHandler(svc service.AuthService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 
-//RegisterRequest represents the JSON body from registration endpoint.
-type RegisterRequest struct{
-	// 'validate' tags define our rules
-	//required: must be present
-	//email: must be a valid email format
-	//min=8: password must be at least 8 characters
-	Email string `json:"email" validate:"required,email" example:"dev@example.com"`
-	Password string `json:"password" validate:"required,min=8" example:"secret123"`
+// --- Request Structs with Binding Tags ---
+
+type RegisterRequest struct {
+	Email    string `json:"email" binding:"required,email" example:"dev@example.com"`
+	Password string `json:"password" binding:"required,min=8" example:"secret123"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email" example:"dev@example.com"`
+	Password string `json:"password" binding:"required,min=8" example:"secret123"`
+}
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email" example:"dev@example.com"`
+}
+
+type ResetPasswordRequest struct {
+	Email       string `json:"email" binding:"required,email"`
+	Token       string `json:"token" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
+type UpdateEmailRequest struct {
+	NewEmail string `json:"new_email" binding:"required,email"`
+}
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type UpdateStatusRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+	Status string `json:"status" binding:"required"`
+}
+
+// --- Handlers ---
 
 // Register godoc
 // @Summary      Register a new user
-// @Description  Create a new user account and returns the user object (excluding password).
+// @Description  Create a new user account and returns the user object.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        request body      RegisterRequest  true  "Registration Info"
 // @Success      201     {object}  models.User
-// @Failure      400     {string}  string "Invalid Request"
-// @Failure      500     {string}  string "Server Error"
 // @Router       /auth/register [post]
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request){
+func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
-
-	//1. Decode the incoming JSON
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
-		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	//2. Validate Struct (Content check)
-	if err := validate.Struct(req); err != nil{
-		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+	user, err := h.svc.Register(c.Request.Context(), req.Email, req.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
 	}
 
-	//3. Execute business logic
-	user, err := h.svc.Register(r.Context(), req.Email, req.Password)
-	if err != nil{
-		http.Error(w, "Failed to register user", http.StatusInternalServerError)
-		return
-	}
-
-	//Respond with the created user(excluding password)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
-
+	c.JSON(http.StatusCreated, user)
 }
 
-//LoginRequest represents the input data from login endpoint.
-type LoginRequest struct{
-	Email string `json:"email" validate:"required,email" example:"dev@example.com"`
-	Password string `json:"password" validate:"required,min=8" example:"secret123"`
-}
-
-//LoginResponse represents the output data( the token)
-type LoginResponse struct{
-	Token string `json:"token"`
-}
-
-//Login godoc
+// Login godoc
 // @Summary      User login
-// @Description  Authenticate user and returns a JWT token upon successful login.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        request body      LoginRequest  true  "Login Info"
-// @Success      200     {object}  LoginResponse
-// @Failure      400     {string}  string "Invalid Request"
-// @Failure      401     {string}  string "Unauthorized"
-// @Failure      500     {string}  string "Server Error"
+// @Success      200     {object}  map[string]string
 // @Router       /auth/login [post]
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request){
+func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	//Validate the Struct
-	if err := validate.Struct(req); err != nil{
-		http.Error(w, "Invalid email or password format", http.StatusBadRequest)
+	accessToken, refreshToken, err := h.svc.Login(c.Request.Context(), req.Email, req.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	accessToken, refreshToken, err := h.svc.Login(r.Context(), req.Email, req.Password)
-	if err != nil{
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	// Send both to the User
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	c.JSON(http.StatusOK, gin.H{
 		"access_token":  accessToken,
-        "refresh_token": refreshToken,
+		"refresh_token": refreshToken,
 	})
-
 }
 
-type ForgotPasswordRequest struct{
-	Email string `json:"email" validate:"required,email" example:"dev@example.com"`
-}
-
-//ForgotPassword godoc
+// ForgotPassword godoc
 // @Summary      Forgot Password
-// @Description  Initiate password reset process by sending a reset link to the user's email.
 // @Tags         auth
-//@Accept        json
-//@Produce       json
-//@Param         request body      ForgotPasswordRequest  true  "Forgot Password Info"
-//@Success       200     {string}  string "If the email exists, a reset code has been sent."
-// @Failure      400     {string}  string "Invalid Request"
-// @Failure      500     {string}  string "Internal Server Error"
-//@Router        /auth/forgot-password [post]
-func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
+// @Router       /auth/forgot-password [post]
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req ForgotPasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	//Logic call
-	_ = h.svc.ForgotPassword(r.Context(), req.Email)
-
-	// We always return 200 so hackers can't "fish" for valid emails
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("If that email is in our system, a reset code has been sent."))
+	_ = h.svc.ForgotPassword(c.Request.Context(), req.Email)
+	c.JSON(http.StatusOK, gin.H{"message": "If that email is in our system, a reset code has been sent."})
 }
 
-type ResetPasswordRequest struct {
-    Email       string `json:"email" validate:"required,email"`
-    Token       string `json:"token" validate:"required"`
-    NewPassword string `json:"new_password" validate:"required,min=8"`
-}
-
-//ResetPassword godoc
 // ResetPassword godoc
 // @Summary      Reset password using token
-// @Description  Verifies the reset token and updates the user's password in the database.
 // @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        request body      ResetPasswordRequest  true  "Reset Details"
-// @Success      200     {string}  string "Password reset successful"
-// @Failure      400     {string}  string "Invalid token or expired"
-// @Failure      500     {string}  string "Internal Server Error"
 // @Router       /auth/reset-password [post]
-func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Validate the struct
-	if err := validate.Struct(req); err != nil {
-		http.Error(w, "Invalid input data", http.StatusBadRequest)
+	if err := h.svc.ResetPassword(c.Request.Context(), req.Email, req.Token, req.NewPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	//Call service logic 
-	err := h.svc.ResetPassword(r.Context() , req.Email, req.Token, req.NewPassword)
-	if err != nil{
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	w.Write([]byte("Password has been reset successfully. You can now login."))
+	c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully."})
 }
 
 // GetProfile godoc
 // @Summary      Get user profile
-// @Description  Retrieves the profile information of the authenticated user.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
 // @Security     ApiKeyAuth
-// @Success      200 {object} models.User
-// @Failure      401 {string} string "Unauthorized"
-// @Failure      404 {string} string "User not found"
 // @Router       /auth/me [get]
-func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request){
-	// 1. Pull UserID out of the context (set by middleware)
-	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
-	if !ok {
-		http.Error(w, "Could not find user in context", http.StatusUnauthorized)
+func (h *AuthHandler) GetProfile(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDKey)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 		return
 	}
 
-	// 2. Featch user from DB using the ID
-	user, err := h.svc.GetUserByID(r.Context(), userID)
-	if err != nil{
-		http.Error(w, "User not Found", http.StatusNotFound)
+	user, err := h.svc.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	// 3. Return the user
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	c.JSON(http.StatusOK, user)
 }
 
 // GetAllUsers godoc
 // @Summary      Get all users (Admin only)
-// @Description  Retrieves a list of all registered users. Accessible only by admin users.
-// @Tags         admin
-// @Accept       json
-// @Produce      json
 // @Security     ApiKeyAuth
-// @Success      200 {array} models.User
-// @Failure      401 {string} string "Unauthorized"
-// @Failure      403 {string} string "Forbidden"
 // @Router       /auth/admin/users [get]
-func (h *AuthHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
-	// 1. Call the service
-	// Note: Since this is behind RoleMiddleware, we KNOW the user is an admin
-	users, err := h.svc.GetAllUsers(r.Context())
-	if err != nil{
-		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
+func (h *AuthHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.svc.GetAllUsers(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
 		return
 	}
-
-	// Set the header to JSON
-	w.Header().Set("Content-Type", "application/json")
-
-	// 3. Encode the slice of users into response
-	if err := json.NewEncoder(w).Encode(users); err != nil{
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	c.JSON(http.StatusOK, users)
 }
-
 
 // DeleteUser godoc
 // @Summary      Delete a user
-// @Description  Removes a user from the system. Admin only.
-// @Tags         admin
-// @Accept       json
-// @Produce      json
 // @Security     ApiKeyAuth
-// @Param        id   query      string  true  "User ID"
-// @Success      204  {string}   string  "No Content"
-// @Failure      400  {string}   string  "ID required"
 // @Router       /auth/admin/users [delete]
-func (h *AuthHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	// 1. Get the ID of the person LOOGED IN (from JWT/Context)
-	currentUserID,_ := r.Context().Value(middleware.UserIDKey).(string)
+func (h *AuthHandler) DeleteUser(c *gin.Context) {
+	currentUserID := c.GetString(middleware.UserIDKey)
+	targetID := c.Query("id")
 
-	// 2. Get the ID from the URL (if provided)
-	targetID := r.URL.Query().Get("id")
-
-	var idToDelete string
-
-	if targetID != ""{
-		// If an ID is in the URL, the user is trying to delete someone else.
-        // Our RoleMiddleware (in main.go) ensures only Admins reach this logic.
+	idToDelete := currentUserID
+	if targetID != "" {
 		idToDelete = targetID
-	} else {
-		// If not ID in URL, the user is tring to delete THEMSELVES.
-		idToDelete =currentUserID
 	}
 
-	// 3. Call service
-	if err := h.svc.DeleteUser(r.Context(), idToDelete); err != nil{
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := h.svc.DeleteUser(c.Request.Context(), idToDelete); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	c.Status(http.StatusNoContent)
 }
 
-// DeleteMe godoc
-// @Summary      Delete own account
-// @Description  Deletes the currently authenticated user's account.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Security     ApiKeyAuth
-// @Param        id   query      string  true  "User ID"
-// @Success      204  {string}  string  "No Content"
-// @Failure      400  {string}   string  "ID required"
-// @Router       /auth/me [delete]
-func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request){
-	h.DeleteUser(w, r)
+func (h *AuthHandler) DeleteMe(c *gin.Context) {
+	h.DeleteUser(c)
 }
-
-type UpdateEmailRequest struct{
-		NewEmail string `json:"new_email" validate:"required,email"`
-	}
 
 // UpdateEmail godoc
 // @Summary      Update own email
-// @Description  Updates the email address of the currently authenticated user.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
 // @Security     ApiKeyAuth
-// @Param        request  body      UpdateEmailRequest  true  "New Email Details"
-// @Success      200      {object}  map[string]string   "{"message": "Email updated successfully"}"
-// @Failure      400      {string}  string              "Invalid request body"
-// @Failure      401      {string}  string              "Unauthorized"
 // @Router       /auth/me/email [put]
-func (h *AuthHandler) UpdateEmail(w http.ResponseWriter, r *http.Request){
-	// 1. Pull UserID out of the context (set by middleware)
-	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
-	if !ok {
-		http.Error(w, "Could not find user in context", http.StatusUnauthorized)
-		return
-	}
-
-	// 2. Decode the request body
+func (h *AuthHandler) UpdateEmail(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDKey)
 	var req UpdateEmailRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 3. Call the service
-	if err := h.svc.UpdateEmail(r.Context(), userID, req.NewEmail); err != nil{
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := h.svc.UpdateEmail(c.Request.Context(), userID, req.NewEmail); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Email updaated successfully"})
-}
-
-type ChangePasswordRequest struct{
-	OldPassword string `json:"old_password" validate:"required"`
-    NewPassword string `json:"new_password" validate:"required,min=8"`
+	c.JSON(http.StatusOK, gin.H{"message": "Email updated successfully"})
 }
 
 // ChangePassword godoc
 // @Summary      Change own password
-// @Description  Allows the user to update their password after verifying their old one.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
 // @Security     ApiKeyAuth
-// @Param        request  body      ChangePasswordRequest  true  "Password Details"
-// @Success      200      {object}  map[string]string      "Password changed successfully"
-// @Failure      400      {string}  string                 "Incorrect current password"
 // @Router       /auth/me/password [put]
-func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
-	// 1. Pull UserID out of the context (set by middleware)
-	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
-
-	// 2. Decode the request body
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDKey)
 	var req ChangePasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return 
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	//Call the server
-	if err := h.svc.ChangePassword(r.Context(), userID, req.OldPassword, req.NewPassword); err != nil{
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return 
+	if err := h.svc.ChangePassword(c.Request.Context(), userID, req.OldPassword, req.NewPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Password updated successfully"})
-	
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
 
-//Logout godoc
+// Logout godoc
 // @Summary      Logout user
-// @Description  Informs the client to clear the session.
-// @Tags         auth
-// @Success      200 {object} map[string]string
 // @Router       /auth/logout [post]
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request){
-	//In a stateless JWT app, we simply tell the client we are done.
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})
-}
-
-type RefreshRequest struct {
-    RefreshToken string `json:"refresh_token" validate:"required"`
+func (h *AuthHandler) Logout(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
 // Refresh godoc
 // @Summary      Refresh access token
-// @Description  Provides a new access token using a valid refresh token.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        request  body      RefreshRequest  true  "Refresh Token"
-// @Success      200      {object}  map[string]string "{"access_token": "new_jwt_here"}"
-// @Failure      401      {string}  string            "Invalid or expired token"
 // @Router       /auth/refresh [post]
-func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
-
-	// 1. Decode the Body
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 2. Call the service to validate and generate a new JWT
-	newAccessToken, err := h.svc.RefreshAccessToken(r.Context(), req.RefreshToken)
+	newAccessToken, err := h.svc.RefreshAccessToken(c.Request.Context(), req.RefreshToken)
 	if err != nil {
-		//401 Unautherized because the session is no longer valid
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 3. Return the new access token
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"access_token": newAccessToken,
-	})
-}
-
-type UpdateStatusRequest struct {
-    UserID string `json:"user_id" validate:"required"`
-    Status string `json:"status" validate:"required"`
+	c.JSON(http.StatusOK, gin.H{"access_token": newAccessToken})
 }
 
 // UpdateUserStatus godoc
 // @Summary      Update user status (Admin only)
-// @Description  Allows an admin to activate or deactivate a user account.
-// @Tags         admin
 // @Security     ApiKeyAuth
-// @Param        request  body      UpdateStatusRequest  true  "Status Details"
-// @Success      200      {object}  map[string]string
 // @Router       /auth/admin/user-status [put]
-func (h *AuthHandler) UpdateUserStatus(w http.ResponseWriter, r *http.Request){
+func (h *AuthHandler) UpdateUserStatus(c *gin.Context) {
 	var req UpdateStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	if err := h.svc.UpdateUserStatus(r.Context(), req.UserID, req.Status); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := h.svc.UpdateUserStatus(c.Request.Context(), req.UserID, req.Status); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"message": "User status updated to " + req.Status})
+	c.JSON(http.StatusOK, gin.H{"message": "User status updated to " + req.Status})
 }
