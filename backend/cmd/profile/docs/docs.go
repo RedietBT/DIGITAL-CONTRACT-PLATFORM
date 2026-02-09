@@ -22,6 +22,9 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "tags": [
+                    "admin"
+                ],
                 "summary": "Update user status (Admin only)",
                 "responses": {}
             }
@@ -33,6 +36,9 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "tags": [
+                    "admin"
+                ],
                 "summary": "Get all users (Admin only)",
                 "responses": {}
             },
@@ -41,6 +47,9 @@ const docTemplate = `{
                     {
                         "ApiKeyAuth": []
                     }
+                ],
+                "tags": [
+                    "admin"
                 ],
                 "summary": "Delete a user",
                 "responses": {}

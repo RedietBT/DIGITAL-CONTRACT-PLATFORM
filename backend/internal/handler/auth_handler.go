@@ -166,6 +166,7 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 
 // GetAllUsers godoc
 // @Summary      Get all users (Admin only)
+// @Tags         admin
 // @Security     ApiKeyAuth
 // @Router       /auth/admin/users [get]
 func (h *AuthHandler) GetAllUsers(c *gin.Context) {
@@ -179,6 +180,7 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 
 // DeleteUser godoc
 // @Summary      Delete a user
+// @Tags         admin
 // @Security     ApiKeyAuth
 // @Router       /auth/admin/users [delete]
 func (h *AuthHandler) DeleteUser(c *gin.Context) {
@@ -270,6 +272,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 // UpdateUserStatus godoc
 // @Summary      Update user status (Admin only)
+// @Tags         admin
 // @Security     ApiKeyAuth
 // @Router       /auth/admin/user-status [put]
 func (h *AuthHandler) UpdateUserStatus(c *gin.Context) {

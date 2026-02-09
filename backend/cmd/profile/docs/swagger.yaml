@@ -77,17 +77,23 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update user status (Admin only)
+      tags:
+      - admin
   /auth/admin/users:
     delete:
       responses: {}
       security:
       - ApiKeyAuth: []
       summary: Delete a user
+      tags:
+      - admin
     get:
       responses: {}
       security:
       - ApiKeyAuth: []
       summary: Get all users (Admin only)
+      tags:
+      - admin
   /auth/forgot-password:
     post:
       responses: {}

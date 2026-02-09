@@ -16,6 +16,9 @@
                         "ApiKeyAuth": []
                     }
                 ],
+                "tags": [
+                    "admin"
+                ],
                 "summary": "Update user status (Admin only)",
                 "responses": {}
             }
@@ -27,6 +30,9 @@
                         "ApiKeyAuth": []
                     }
                 ],
+                "tags": [
+                    "admin"
+                ],
                 "summary": "Get all users (Admin only)",
                 "responses": {}
             },
@@ -35,6 +41,9 @@
                     {
                         "ApiKeyAuth": []
                     }
+                ],
+                "tags": [
+                    "admin"
                 ],
                 "summary": "Delete a user",
                 "responses": {}
