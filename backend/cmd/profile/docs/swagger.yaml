@@ -26,6 +26,27 @@ definitions:
     - email
     - password
     type: object
+  models.Profile:
+    properties:
+      bio:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      is_template_seller:
+        type: boolean
+      rating_avg:
+        type: number
+      rating_count:
+        type: integer
+      skill_level:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   models.User:
     properties:
       created_at:
@@ -43,11 +64,11 @@ definitions:
       updated_at:
         type: string
     type: object
-host: localhost:8080
+host: localhost:8082
 info:
   contact: {}
-  description: Auth Service with RabbitMQ & Gin.
-  title: Digital Contract Platform API (Auth)
+  description: Profile Service for the Digital Contract Platform.
+  title: Digital Contract Platform - Profile Service
   version: "1.0"
 paths:
   /auth/admin/user-status:
@@ -150,6 +171,64 @@ paths:
       summary: Reset password using token
       tags:
       - auth
+  /profile/me:
+    get:
+      description: Fetches the profile for the user identified by the JWT token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Profile'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get My Profile
+      tags:
+      - profile
+    put:
+      consumes:
+      - application/json
+      description: Allows the user to update their display name, bio, and other details.
+      parameters:
+      - description: Profile data
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/models.Profile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Profile
+      tags:
+      - profile
 securityDefinitions:
   ApiKeyAuth:
     in: header

@@ -2,24 +2,31 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/handler"
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title           Digital Contract Platform API
+// @title           Digital Contract Platform - Profile Service
 // @version         1.0
-// @description     This is the Profile Service for the Digital Contract Platform.
-// @host            localhost:8081
+// @description     Profile Service for the Digital Contract Platform.
+// @host            localhost:8082
 // @BasePath        /
-
+// @securityDefinitions.apikey ApiKeyAuth
+// @in              header
+// @name            Authorization
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
+	jwtSecret := os.Getenv("JWT_SECRET")
 	if dsn == ""{
 		log.Fatal("❌ DATABASE_DSN is not set in environment variables")
 	}
@@ -47,13 +54,15 @@ func main() {
 		log.Fatalf("❌ Failed to connect to RabbitMQ: %v", err)
 	}
 	defer conn.Close()
+
 	// Intialize Layers (Dependency Injection)
 	repo := repository.NewProfileRepository(db)
-	profileSvc := service.NewProfileService(repo)
+	svc := service.NewProfileService(repo)
+	h := handler.NewProfileHandler(svc)
 
 	// Intialixe & Start RabbitMQ Consumer
 	// We pass 'profilerSvc' because it implements the UserEventHandler interface
-	profileConsumer, err := broker.NewProfileConsumer(conn, profileSvc)
+	profileConsumer, err := broker.NewProfileConsumer(conn, svc)
 	if err != nil {
 		log.Fatalf("❌ Failed to create profile consumer: %v", err)
 	}
@@ -62,15 +71,26 @@ func main() {
 	profileConsumer.Start()
 	log.Println("❌ Failed to create consumer: %v", err)
 
-	// 6. Start HTTP Server (Example placeholder)
-	// This is where you Gin or Echo handlers would go 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Profile Service is Healthy"))
+	// Gin Engine Setup
+	r := gin.Default()
+
+	// Swagger & Health Check (Public)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "Profile Service is running"})
 	})
 
-	log.Println("🌐 Profile Service API listening on :8082")
-	if err := http.ListenAndServe(":8082", nil); err != nil {
-		log.Fatalf("❌ Server failed: %v", err)
+	// Protected Profile Routes
+	// We use the custom ProfileAuthMiddleware to protect these routes
+	profileGroup := r.Group("/profile")
+	profileGroup.Use(middleware.ProfileAuthMiddleware(jwtSecret))
+	{
+		profileGroup.GET("/me", h.GetProfile)
+		profileGroup.PUT("/me", h.UpdateProfile)
 	}
+
+	log.Println("🚀 Profile Service API listening on :8082")
+    if err := r.Run(":8082"); err != nil {
+        log.Fatalf("❌ Server failed: %v", err)
+    }
 }

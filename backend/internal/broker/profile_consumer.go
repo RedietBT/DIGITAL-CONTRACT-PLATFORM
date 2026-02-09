@@ -3,13 +3,15 @@ package broker
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type UserEventHandler interface{
+type UserEventHandler interface {
 	HandleUserCreatedEvent(ctx context.Context, event models.UserCreatedEvent) error
+	HandleUserDeletedEvent(ctx context.Context, userID string) error
 }
 
 type ProfileConsumer struct {
@@ -17,7 +19,7 @@ type ProfileConsumer struct {
 	handler UserEventHandler
 }
 
-func NewProfileConsumer(conn *amqp.Connection, handler UserEventHandler) (*ProfileConsumer, error){
+func NewProfileConsumer(conn *amqp.Connection, handler UserEventHandler) (*ProfileConsumer, error) {
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
@@ -29,9 +31,10 @@ func NewProfileConsumer(conn *amqp.Connection, handler UserEventHandler) (*Profi
 	}, nil
 }
 
-func (c *ProfileConsumer) Start(){
-	// Declare exchage and queue
-	_= c.channel.ExchangeDeclare(
+// Start now contains the merged logic for both Create and Delete
+func (c *ProfileConsumer) Start() {
+	// 1. Declare Exchange (Fanout)
+	_ = c.channel.ExchangeDeclare(
 		"user_events",
 		"fanout",
 		true,
@@ -41,6 +44,7 @@ func (c *ProfileConsumer) Start(){
 		nil,
 	)
 
+	// 2. Declare Queue
 	q, _ := c.channel.QueueDeclare(
 		"profile_creation_queue",
 		true,
@@ -50,16 +54,34 @@ func (c *ProfileConsumer) Start(){
 		nil,
 	)
 
-	_ = c.channel.QueueBind( q.Name, "", "user_events", false, nil)
-	
+	// 3. Bind Queue to Exchange
+	_ = c.channel.QueueBind(q.Name, "", "user_events", false, nil)
+
+	// 4. Start Consuming
 	msgs, _ := c.channel.Consume(q.Name, "", true, false, false, false, nil)
 
 	go func() {
 		for d := range msgs {
-			var event models.UserCreatedEvent
-			json.Unmarshal(d.Body, &event)
-			c.handler.HandleUserCreatedEvent(context.Background(), event)
+			var raw map[string]interface{}
+			if err := json.Unmarshal(d.Body, &raw); err != nil {
+				log.Printf("❌ Failed to unmarshal message: %v", err)
+				continue
+			}
+
+			ctx := context.Background()
+
+			// LOGIC: Check 'email' for Create OR 'user_id' for Delete
+			if _, isCreate := raw["email"]; isCreate {
+				var event models.UserCreatedEvent
+				json.Unmarshal(d.Body, &event)
+				log.Printf("📥 Consumer: Handling User Created for %s", event.UserID)
+				_ = c.handler.HandleUserCreatedEvent(ctx, event)
+
+			} else if userID, ok := raw["user_id"].(string); ok {
+				log.Printf("📥 Consumer: Handling User Deleted for %s", userID)
+				// This satisfies the requirement to sync the profile_schema.profile table
+				_ = c.handler.HandleUserDeletedEvent(ctx, userID)
+			}
 		}
 	}()
 }
-

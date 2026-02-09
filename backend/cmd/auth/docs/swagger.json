@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the Auth Service for the Digital Contract Platform.",
-        "title": "Digital Contract Platform API",
+        "description": "Auth Service with RabbitMQ \u0026 Gin.",
+        "title": "Digital Contract Platform API (Auth)",
         "contact": {},
         "version": "1.0"
     },
@@ -16,33 +16,8 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Allows an admin to activate or deactivate a user account.",
-                "tags": [
-                    "admin"
-                ],
                 "summary": "Update user status (Admin only)",
-                "parameters": [
-                    {
-                        "description": "Status Details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.UpdateStatusRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/admin/users": {
@@ -52,40 +27,8 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves a list of all registered users. Accessible only by admin users.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
                 "summary": "Get all users (Admin only)",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.User"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             },
             "delete": {
                 "security": [
@@ -93,91 +36,21 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Removes a user from the system. Admin only.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
                 "summary": "Delete a user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "ID required",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/forgot-password": {
             "post": {
-                "description": "Initiate password reset process by sending a reset link to the user's email.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
                     "auth"
                 ],
                 "summary": "Forgot Password",
-                "parameters": [
-                    {
-                        "description": "Forgot Password Info",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.ForgotPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "If the email exists, a reset code has been sent.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/login": {
             "post": {
-                "description": "Authenticate user and returns a JWT token upon successful login.",
                 "consumes": [
                     "application/json"
                 ],
@@ -203,41 +76,6 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/logout": {
-            "post": {
-                "description": "Informs the client to clear the session.",
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Logout user",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
@@ -245,6 +83,12 @@
                         }
                     }
                 }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "summary": "Logout user",
+                "responses": {}
             }
         },
         "/auth/me": {
@@ -254,78 +98,8 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves the profile information of the authenticated user.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
                 "summary": "Get user profile",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Deletes the currently authenticated user's account.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Delete own account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "ID required",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/me/email": {
@@ -335,51 +109,8 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Updates the email address of the currently authenticated user.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
                 "summary": "Update own email",
-                "parameters": [
-                    {
-                        "description": "New Email Details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.UpdateEmailRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"message\": \"Email updated successfully\"}",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/me/password": {
@@ -389,93 +120,19 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Allows the user to update their password after verifying their old one.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
                 "summary": "Change own password",
-                "parameters": [
-                    {
-                        "description": "Password Details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.ChangePasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Password changed successfully",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Incorrect current password",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/refresh": {
             "post": {
-                "description": "Provides a new access token using a valid refresh token.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
                 "summary": "Refresh access token",
-                "parameters": [
-                    {
-                        "description": "Refresh Token",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.RefreshRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"access_token\": \"new_jwt_here\"}",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or expired token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/auth/register": {
             "post": {
-                "description": "Create a new user account and returns the user object (excluding password).",
+                "description": "Create a new user account and returns the user object.",
                 "consumes": [
                     "application/json"
                 ],
@@ -503,98 +160,21 @@
                         "schema": {
                             "$ref": "#/definitions/models.User"
                         }
-                    },
-                    "400": {
-                        "description": "Invalid Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
                     }
                 }
             }
         },
         "/auth/reset-password": {
             "post": {
-                "description": "Verifies the reset token and updates the user's password in the database.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
                     "auth"
                 ],
                 "summary": "Reset password using token",
-                "parameters": [
-                    {
-                        "description": "Reset Details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.ResetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Password reset successful",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid token or expired",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
+                "responses": {}
             }
         }
     },
     "definitions": {
-        "handler.ChangePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "old_password": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.ForgotPasswordRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "dev@example.com"
-                }
-            }
-        },
         "handler.LoginRequest": {
             "type": "object",
             "required": [
@@ -613,25 +193,6 @@
                 }
             }
         },
-        "handler.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.RefreshRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
         "handler.RegisterRequest": {
             "type": "object",
             "required": [
@@ -640,7 +201,6 @@
             ],
             "properties": {
                 "email": {
-                    "description": "'validate' tags define our rules\nrequired: must be present\nemail: must be a valid email format\nmin=8: password must be at least 8 characters",
                     "type": "string",
                     "example": "dev@example.com"
                 },
@@ -648,52 +208,6 @@
                     "type": "string",
                     "minLength": 8,
                     "example": "secret123"
-                }
-            }
-        },
-        "handler.ResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "new_password",
-                "token"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.UpdateEmailRequest": {
-            "type": "object",
-            "required": [
-                "new_email"
-            ],
-            "properties": {
-                "new_email": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.UpdateStatusRequest": {
-            "type": "object",
-            "required": [
-                "status",
-                "user_id"
-            ],
-            "properties": {
-                "status": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },
@@ -726,7 +240,6 @@
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
-            "description": "Type \"Bearer\" followed by a space and JWT token.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
@@ -13,7 +14,7 @@ type ProfileService interface{
 	HandleUserCreatedEvent(ctx context.Context, event models.UserCreatedEvent) error
 	GetProfile(ctx context.Context, userID string) (*models.Profile, error)
 	UpdateProfile(ctx context.Context, p *models.Profile) error
-	DeleteProfile(ctx context.Context, userID string) error
+	HandleUserDeletedEvent(ctx context.Context, userID string) error
 }
 
 type profileService struct {
@@ -62,6 +63,10 @@ func (s *profileService) UpdateProfile(ctx context.Context, p *models.Profile) e
 	return s.repo.UpdateProfile(ctx, p)
 }
 
-func (s *profileService) DeleteProfile(ctx context.Context, userID string) error {
+func (s *profileService) HandleUserDeletedEvent(ctx context.Context, userID string) error {
+	log.Printf("📥 Consumer: Syncing deletion for UserID %s", userID)
+	
+	// This satisfies your rule: "the corresponding profile should also be deleted 
+    // from the profile_schema.profile table."
 	return s.repo.DeleteProfile(ctx, userID)
 }
