@@ -11,6 +11,9 @@ import (
 type ProfileService interface{
 	// Use the Event struct instead of individual strings
 	HandleUserCreatedEvent(ctx context.Context, event models.UserCreatedEvent) error
+	GetProfile(ctx context.Context, userID string) (*models.Profile, error)
+	UpdateProfile(ctx context.Context, p *models.Profile) error
+	DeleteProfile(ctx context.Context, userID string) error
 }
 
 type profileService struct {
@@ -44,10 +47,21 @@ func (s *profileService) GetProfile(ctx context.Context, userID string) (*models
 }
 
 func (s *profileService) UpdateProfile(ctx context.Context, p *models.Profile) error {
+	// 1. Verify the profile exists
+    // We fetch it to ensure we aren't trying to update a non-existent record
+	_, err := s.repo.GetProfileByID(ctx, p.UserID)
+	if err != nil {
+		return errors.New("profile not found")
+	}
+
 	// Prevent skill level from going below 1
 	if p.SkillLevel < 1 {
 		p.SkillLevel = 1
 	}
 
 	return s.repo.UpdateProfile(ctx, p)
+}
+
+func (s *profileService) DeleteProfile(ctx context.Context, userID string) error {
+	return s.repo.DeleteProfile(ctx, userID)
 }
