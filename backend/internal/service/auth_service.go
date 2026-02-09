@@ -32,13 +32,13 @@ type AuthService interface{
 
 type authService struct {
 	repo repository.UserRepository
-	broker *broker.RabbitMQProvider
+	broker *broker.AuthPublisher
 	jwtSecret string
 }
 
 //NewAuthService creates a new instance of AuthService with the provided UserRepository.
 //This is our "Constructor" for Dependency Injection.
-func NewAuthService(repo repository.UserRepository, broker *broker.RabbitMQProvider, secret string) AuthService{
+func NewAuthService(repo repository.UserRepository, broker *broker.AuthPublisher, secret string) AuthService{
 	return  &authService{
 		repo: repo,
 		broker: broker,
@@ -73,7 +73,10 @@ func(s *authService) Register(ctx context.Context, email, password string)(*mode
 	// ✨ ADD THIS: Tell RabbitMQ a user was created!
     if s.broker != nil {
         // We broadcast the ID and Email so the Profile Service can store them
-        _ = s.broker.PublishUserCreated(ctx, user.ID, user.Email) 
+        _ = s.broker.PublishUserCreated(ctx, models.UserCreatedEvent{
+			UserID: user.ID,
+			Email: user.Email,
+		}) 
     }
 
 	return user, nil

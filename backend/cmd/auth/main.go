@@ -11,6 +11,7 @@ import (
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
+	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -57,20 +58,27 @@ func main() {
 		rabbitURL = "amqp://guest:guest@rabbitmq:5672/"
 	}
 
-	// 3. Initalize the broker (this is what creates the Exchange!)
-	brokerProv, err := broker.NewRabbitMQProvider(rabbitURL)
+	// 3. Connect to the "Cable" (using the pkg/broker)
+	conn, err := pkgBroker.Connect(rabbitURL)
 	if err != nil {
 		log.Fatalf("Could not connect to RabbitMQ: %v", err)
 	}
-	defer brokerProv.Close()
+	defer conn.Close()
 
-	// 4. Pass it to the seervice
-	svc := service.NewAuthService(repo, brokerProv, jwtSecret)
+	// 4. Initialize the specific Publisher (using internal/broker)
+	authPub, err := broker.NewAuthPublisher(conn)
+	if err != nil {
+		log.Fatalf("Could not connect to RabbitMQ: %v", err)
+	}
 
-	// 5. Initiatize Handlers( Inject Services)
+
+	// 5. Pass it to the seervice
+	svc := service.NewAuthService(repo, authPub, jwtSecret)
+
+	// 6. Initiatize Handlers( Inject Services)
 	h := handler.NewAuthHandler(svc)
 
-	// 6. Setup Routes
+	// 7. Setup Routes
 	// Public routes
 	http.HandleFunc("/auth/register", h.Register)
 	http.HandleFunc("/auth/login", h.Login)
