@@ -10,15 +10,15 @@ import (
 // Contract represents the master document record
 type Contract struct {
 	ID                  uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	OwnerUserID         uuid.UUID  `gorm:"type:uuid;not null" json:"owner_user_id" validate:"required,min=3,max=100,alphanum_start,no_scripts"`
-	Title               string     `gorm:"type:varchar(255);not null" json:"title" validate:"required,min=3"`
+	OwnerUserID         uuid.UUID  `gorm:"type:uuid;not null" json:"owner_user_id"`
+	Title               string     `gorm:"type:varchar(255);not null" json:"title" validate:"required,min=3,max=100,alphanum_start,no_scripts"`
 	Description         string     `gorm:"type:text" json:"description" validate:"required,min=3,max=1000,no_scripts"`
 	Status              string     `gorm:"type:varchar(50);default:'draft'" json:"status"`
-	CurrentVersion      int        `grom:"type:int;default:1" json:"current_version"`
-	TemplateID          uuid.UUID   `gorm:"type:uuid" json:"template_id,omitempty"`
+	CurrentVersion      int        `gorm:"type:int;default:1" json:"current_version"`
+	TemplateID          *uuid.UUID  `gorm:"type:uuid" json:"template_id,omitempty"`
 	CreatedAt           time.Time  `json:"created_at"`
 	UpdatedAt           time.Time  `json:"updated_at"`
-	CompletedAt         time.Time  `json:"completed_at,omitempty"`
+	CompletedAt         *time.Time  `json:"completed_at,omitempty"`
 
 	Versions     []ContractVersion     `gorm:"foreignKey:ContractID" json:"versions,omitempty"`
 	Participants []ContractParticipant `gorm:"foreignKey:ContractID" json:"participants,omitempty"`
