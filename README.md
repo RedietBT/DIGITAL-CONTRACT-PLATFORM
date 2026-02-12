@@ -1,8 +1,3 @@
-### 📄 2. `README.md` (Main Project)
-
-**Location:** `/backend/README.md`
-
-```markdown
 # 🚀 Digital Contract Platform
 
 A high-performance, microservices-based platform for managing digital agreements, utilizing an event-driven architecture and PostgreSQL schema isolation.
@@ -20,7 +15,7 @@ Run the following commands to update the blueprints for the Global Swagger UI:
 ```bash
 swag init -g cmd/auth/main.go -o cmd/auth/docs --instanceName auth
 swag init -g cmd/profile/main.go -o cmd/profile/docs --instanceName profile
-swag init -g cmd/contract/main.go -o cmd/contract/docs --parseDependency --parseInternal
+swag init -g cmd/contract/main.go -o cmd/contract/docs --instanceName profile
 
 ```
 
