@@ -11,6 +11,7 @@ import (
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
+	
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -75,6 +76,9 @@ func main() {
 
 	// Gin Engine Setup
 	r := gin.Default()
+
+	// Add CORS Middleware
+	r.Use(middleware.CORSMiddleware())
 
 	// Swagger & Health Check (Public)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

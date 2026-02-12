@@ -69,6 +69,9 @@ func main() {
 	// 5. Gin Setup
 	r := gin.Default()
 
+	// Add CORS Middleware
+	r.Use(middleware.CORSMiddleware())
+
 	// 6. Swagger & Health
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/health", func(c *gin.Context) {
