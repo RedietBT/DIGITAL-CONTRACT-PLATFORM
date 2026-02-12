@@ -1,45 +1,50 @@
-# Digital Contract Platform
+### 📄 2. `README.md` (Main Project)
 
-A microservices-based platform for managing digital contracts, utilizing an event-driven architecture for high data consistency.
+**Location:** `/backend/README.md`
 
-## 🏗️ Architecture
+```markdown
+# 🚀 Digital Contract Platform
 
-* **Auth Service (`:8080`)**: Handles user registration, login, and JWT generation. It broadcasts user events (created/deleted) to the message broker.
-* **Profile Service (`:8082`)**: Manages detailed user information in `profile_schema.profile`. It stays in sync with the Auth Service via RabbitMQ.
-* **Message Broker**: **RabbitMQ** handles asynchronous communication between services to ensure data integrity.
-* **Database**: **PostgreSQL** with schema-based isolation (e.g., `auth_schema`, `profile_schema`).
+A high-performance, microservices-based platform for managing digital agreements, utilizing an event-driven architecture and PostgreSQL schema isolation.
 
-## 🚀 How to Run
+## 🏗️ System Architecture
+* **Auth Service (`:8080`)**: Identity management and JWT issuance.
+* **Contract Service (`:8081`)**: Document lifecycle and versioning.
+* **Profile Service (`:8082`)**: User metadata and personal details.
+* **Global Swagger (`:8085`)**: Centralized API documentation for all services.
 
-1. **Generate Documentation**:
-Ensure Swagger docs are up to date for both services:
+## 🚀 Getting Started
+
+### 1. Generate All Documentation
+Run the following commands to update the blueprints for the Global Swagger UI:
 ```bash
-swag init -g cmd/auth/main.go --output cmd/auth/docs
-swag init -g cmd/profile/main.go --output cmd/profile/docs
+swag init -g cmd/auth/main.go -o cmd/auth/docs --instanceName auth
+swag init -g cmd/profile/main.go -o cmd/profile/docs --instanceName profile
+swag init -g cmd/contract/main.go -o cmd/contract/docs --parseDependency --parseInternal
 
 ```
 
+### 2. Launch Platform
 
-2. **Deploy with Docker**:
-Navigate to the deployments folder and start the stack:
 ```bash
 cd deployments
 docker-compose up --build
 
 ```
 
+## 📡 Core Event Flows
 
+| Event | Source | Action |
+| --- | --- | --- |
+| **UserCreated** | Auth Service | Profile Service initializes user data. |
+| **UserDeleted** | Auth Service | Profile Service deletes profile; Contract Service purges owned contracts. |
 
-## 🔗 Access Points
+## 🔗 Infrastructure Access
 
-* **Auth Swagger UI**: [http://localhost:8080/swagger/index.html](https://www.google.com/search?q=http://localhost:8080/swagger/index.html)
-* **Profile Swagger UI**: [http://localhost:8082/swagger/index.html](https://www.google.com/search?q=http://localhost:8082/swagger/index.html)
-* **RabbitMQ Management**: [http://localhost:15672](https://www.google.com/search?q=http://localhost:15672) (User/Pass: guest/guest)
-* **MailHog (Email Testing)**: [http://localhost:8025](https://www.google.com/search?q=http://localhost:8025)
+* **Global Docs**: [http://localhost:8085](https://www.google.com/search?q=http://localhost:8085)
+* **MailHog**: [http://localhost:8025](https://www.google.com/search?q=http://localhost:8025) (SMTP testing)
+* **RabbitMQ**: [http://localhost:15672](https://www.google.com/search?q=http://localhost:15672) (guest/guest)
 
-## 📡 Event-Driven Logic
-
-* **User Created**: When a user registers, the Profile Service automatically initializes their profile.
-* **User Deleted**: When a user is deleted from the Auth service, the corresponding profile is purged from the database via a RabbitMQ event.
+```
 
 ---
