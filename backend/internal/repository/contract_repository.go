@@ -14,6 +14,7 @@ type ContractRepository interface {
 	GetContractsByUserID(ctx context.Context,userID uuid.UUID) ([]models.Contract, error)
 	UpdateContract(ctx context.Context,contract *models.Contract) error
 	DeleteContract(ctx context.Context,contractID uuid.UUID) error
+	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
 type contractRepository struct {
@@ -68,4 +69,9 @@ func (r *contractRepository) DeleteContract(ctx context.Context, contractID uuid
 	// Because of our ON DELETE CASCADE in the database migration,
 	// deleting the contract here will automatically clean up versions and participants.
 	return r.db.WithContext(ctx).Delete(&models.Contract{}, "id = ?", contractID).Error
+}
+
+func (r *contractRepository) DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error {
+    // This deletes all contracts where owner_user_id matches the deleted user
+    return r.db.WithContext(ctx).Delete(&models.Contract{}, "owner_user_id = ?", userID).Error
 }
