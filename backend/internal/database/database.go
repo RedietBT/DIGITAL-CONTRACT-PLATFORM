@@ -1,62 +1,60 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
+	gormPostgres "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-//Connect initalizes the database connection pool
-func Connect(dsn string) (*sql.DB, error) {
-	var db *sql.DB
+// Connect now returns *gorm.DB
+func Connect(dsn string) (*gorm.DB, error) {
+	var db *gorm.DB
 	var err error
 
 	for i := 0; i < 5; i++ {
-		db, err = sql.Open("postgres", dsn)
+		db, err = gorm.Open(gormPostgres.Open(dsn), &gorm.Config{})
 		if err == nil {
-			err = db.Ping()
+			// Verify connection
+			sqlDB, _ := db.DB()
+			if err = sqlDB.Ping(); err == nil {
+				return db, nil
+			}
 		}
 
-		if err == nil {
-			return db, nil
-		}
 		fmt.Printf("⏳ Connecting to DB (attempt %d/5)...\n", i+1)
 		time.Sleep(2 * time.Second)
 	}
-
-	return  nil, err
+	return nil, err
 }
 
-//RunMigrations handles the "Content" -Synchronizing your SQL tables
-func RunMigrations(db *sql.DB) error {
-	//1. Create a migration driver from our existing DB connection
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil{
-		return  fmt.Errorf("Could not create migration driver: %v", err)
+// RunMigrations now accepts *gorm.DB
+func RunMigrations(gormDB *gorm.DB) error {
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		return err
 	}
 
-	//2. Point to your migration files (ensure this path is correct in Docker)
-	// We use "file://internal/migrations" relative to the project root
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://internal/migrations",
-		"postgres", driver)
-
-	if err != nil{
-		return fmt.Errorf("migration init failed: %v", err)
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+	if err != nil {
+		return err
 	}
 
-	//3. Apply the migrations(Up)
-	err = m.Up()
-	if err != nil && err != migrate.ErrNoChange{
-		return  fmt.Errorf("migration up failed: %v", err)
+	m, err := migrate.NewWithDatabaseInstance("file://internal/migrations", "postgres", driver)
+	if err != nil {
+		return err
 	}
 
-	log.Println("✅ Database migrations synchronized successfully!")
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	log.Println("✅ Migrations complete")
 	return nil
 }

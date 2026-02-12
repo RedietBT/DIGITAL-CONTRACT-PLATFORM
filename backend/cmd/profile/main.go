@@ -31,16 +31,20 @@ func main() {
 	if dsn == ""{
 		log.Fatal("❌ DATABASE_DSN is not set in environment variables")
 	}
+	if jwtSecret == ""{
+		log.Fatal("❌ JWT_SECRET is not set in environment variables")
+	}
 
 	// Call the funvtion from our internal package
-	db, err := database.Connect(dsn)
+	gormDB, err := database.Connect(dsn)
 	if err != nil{
 		log.Fatal("❌ Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	sqlDB, _ := gormDB.DB()
+	defer sqlDB.Close()
 
-	//Calling AutoMigrate to ensure the User table is created
-	if err := database.RunMigrations(db); err != nil{
+	//Calling Migrate to ensure the User table is created
+	if err := database.RunMigrations(gormDB); err != nil{
 		log.Fatalf("❌ Failed to run migrations: %v", err)
 	}
 
@@ -57,7 +61,7 @@ func main() {
 	defer conn.Close()
 
 	// Intialize Layers (Dependency Injection)
-	repo := repository.NewProfileRepository(db)
+	repo := repository.NewProfileRepository(sqlDB)
 	svc := service.NewProfileService(repo)
 	h := handler.NewProfileHandler(svc)
 

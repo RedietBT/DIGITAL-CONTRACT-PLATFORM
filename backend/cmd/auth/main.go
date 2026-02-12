@@ -34,13 +34,14 @@ func main() {
 	}
 
 	// 2. Database Connection & Migration
-	db, err := database.Connect(dsn)
+	gormDB, err := database.Connect(dsn)
 	if err != nil {
 		log.Fatalf("❌ Database connection failed: %v", err)
 	}
-	defer db.Close()
+	sqlDB, _ := gormDB.DB()
+    defer sqlDB.Close()
 
-	if err := database.RunMigrations(db); err != nil {
+	if err := database.RunMigrations(gormDB); err != nil {
 		log.Fatalf("❌ Migration failed: %v", err)
 	}
 
@@ -61,7 +62,7 @@ func main() {
 	}
 
 	// 4. Layers Initialization
-	repo := repository.NewPostgresUserRepository(db)
+	repo := repository.NewPostgresUserRepository(sqlDB)
 	svc := service.NewAuthService(repo, authPub, jwtSecret)
 	h := handler.NewAuthHandler(svc)
 
