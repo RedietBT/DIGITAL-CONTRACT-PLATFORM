@@ -29,7 +29,7 @@ type ContractVersion struct {
 	ID            uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	ContractID    uuid.UUID      `gorm:"type:uuid;not null" json:"contract_id"`
 	VersionNumber int            `gorm:"not null" json:"version_number"`
-	ContentJSON   datatypes.JSON `gorm:"type:jsonb;not null" json:"content_json"` // Stores articles/bookmarks
+	ContentJSON   datatypes.JSON `gorm:"type:jsonb;not null" json:"content_json" swaggertype:"object"` // Stores articles/bookmarks
 	CreatedBy     uuid.UUID      `gorm:"type:uuid;not null" json:"created_by"`
 	CreatedAt     time.Time      `json:"created_at"`
 }

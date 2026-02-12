@@ -32,7 +32,7 @@ type CreateContractRequest struct {
 // @Tags         contracts
 // @Accept       json
 // @Produce      json
-// @Param        contract    body     contract.CreateContractRequest true "Contract"
+// @Param contract body CreateContractRequest true "Contract"
 // @Success      201         {object} models.Contract
 // @Failure      400         {object} map[string]string
 // @Failure      500         {object} map[string]string
@@ -60,6 +60,7 @@ func (h *ContractHandler) CreateContract(c *gin.Context) {
 	// 4. Call Service 
 	if err := h.svc.CreateContract(c.Request.Context(), contract, req.Content); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create contract"})
+		return
 	}
 
 	c.JSON(http.StatusCreated, contract)
@@ -170,9 +171,11 @@ func(h *ContractHandler) UpdateContract(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Contract updated successfully"})
 }
 
+// DeleteContract godoc
 // @Summary      Delete a contract
 // @Description  Hard delete a contract and its associated data
 // @Tags         contracts
+// @Produce      json
 // @Param        id   path      string  true  "Contract ID"
 // @Success      200  {object}  map[string]string
 // @Router       /contracts/{id} [delete]
