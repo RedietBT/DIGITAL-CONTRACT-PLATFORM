@@ -11,7 +11,7 @@ import (
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
-	
+	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/contract/docs"
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
