@@ -40,6 +40,4 @@ docker-compose up --build
 * **MailHog**: [http://localhost:8025](https://www.google.com/search?q=http://localhost:8025) (SMTP testing)
 * **RabbitMQ**: [http://localhost:15672](https://www.google.com/search?q=http://localhost:15672) (guest/guest)
 
-```
-
 ---
