@@ -13,7 +13,6 @@ import (
 	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/contract/docs"
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
 	"github.com/go-playground/validator/v10"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -87,11 +86,7 @@ func main() {
 	// Gin Engine Setup
 	r := gin.Default()
 
-    config := cors.DefaultConfig()
-    config.AllowAllOrigins = true 
-    config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-    config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-    r.Use(cors.New(config))
+    r.Use(middleware.CORSMiddleware()) // Must be FIRST
 
 	// Swagger & Health Check (Public)
 	// Replace your existing r.GET("/swagger/*any", ...) with this:
@@ -106,9 +101,9 @@ func main() {
 	contractRoutes := r.Group("/contracts")
 	contractRoutes.Use(middleware.ContractMiddleware(jwtSecret))
 	{
-		contractRoutes.POST("/", h.CreateContract)
+		contractRoutes.POST("", h.CreateContract)
 		contractRoutes.GET("/:id", h.GetContract)
-		contractRoutes.GET("/", h.ListContracts)
+		contractRoutes.GET("", h.ListContracts)
 		contractRoutes.PUT("/:id", h.UpdateContract)
 		contractRoutes.DELETE("/:id", h.DeleteContract)
 	}
