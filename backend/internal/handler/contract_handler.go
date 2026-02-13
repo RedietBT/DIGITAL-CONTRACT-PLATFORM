@@ -65,7 +65,7 @@ func (h *ContractHandler) CreateContract(c *gin.Context) {
 
 	// 4. Call Service 
 	if err := h.svc.CreateContract(c.Request.Context(), contract, req.Content); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create contract"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
