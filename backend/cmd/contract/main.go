@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
@@ -100,7 +99,7 @@ func main() {
 
 	log.Println("🚀 Contract Service listening on :8081")
 	//This rplaces 'select{}' and keeps the app runing
-	if err := http.ListenAndServe(":8081", nil); err != nil{
+	if err := r.Run(":8081"); err != nil{
 		log.Fatalf("❌ Server failed: %v", err)
 	}
 }
