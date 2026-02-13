@@ -3,7 +3,7 @@ package docs
 
 import "github.com/swaggo/swag"
 
-const docTemplateprofile = `{
+const docTemplate = `{
     "schemes": {{ marshal .Schemes }},
     "swagger": "2.0",
     "info": {
@@ -1309,20 +1309,20 @@ const docTemplateprofile = `{
     }
 }`
 
-// SwaggerInfoprofile holds exported Swagger Info so clients can modify it
-var SwaggerInfoprofile = &swag.Spec{
+// SwaggerInfo holds exported Swagger Info so clients can modify it
+var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8082",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Digital Contract Platform - Profile Service",
 	Description:      "Profile Service for the Digital Contract Platform.",
-	InfoInstanceName: "profile",
-	SwaggerTemplate:  docTemplateprofile,
+	InfoInstanceName: "swagger",
+	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",
 }
 
 func init() {
-	swag.Register(SwaggerInfoprofile.InstanceName(), SwaggerInfoprofile)
+	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }
