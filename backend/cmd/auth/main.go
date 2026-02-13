@@ -22,10 +22,10 @@ import (
 // @description     Auth Service with RabbitMQ & Gin.
 // @host            localhost:8080
 // @BasePath        /
-// @securityDefinitions.bearerAuth  BearerAuth
-// @type                            apiKey
-// @in              header
-// @name            Authorization
+// @securityDefinitions.apiKey AuthKey
+// @type                       apiKey
+// @in                         header
+// @name                       Authorization
 func main() {
 	// 1. Env Variables
 	dsn := os.Getenv("DATABASE_DSN")

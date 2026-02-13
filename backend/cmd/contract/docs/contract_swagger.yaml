@@ -243,7 +243,9 @@ definitions:
 host: localhost:8081
 info:
   contact: {}
-  description: Type your JWT token
+  description: |-
+    Type your JWT token
+    Service for managing digital contracts.
   title: Digital Contract Platform - Contract Service
   version: "1.0"
 paths:
@@ -281,7 +283,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Update user status (Admin only)
       tags:
       - admin
@@ -306,7 +308,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Delete a user
       tags:
       - admin
@@ -328,7 +330,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Get all users (Admin only)
       tags:
       - admin
@@ -424,7 +426,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Logout user
       tags:
       - default
@@ -457,7 +459,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Get user profile
       tags:
       - default
@@ -495,7 +497,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Update own email
       tags:
       - default
@@ -533,7 +535,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Change own password
       tags:
       - auth
@@ -665,7 +667,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: List user contracts
       tags:
       - contracts
@@ -700,7 +702,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Create a new contract
       tags:
       - contracts
@@ -723,7 +725,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Delete a contract
       tags:
       - contracts
@@ -757,7 +759,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Get a single contract
       tags:
       - contracts
@@ -787,7 +789,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Update contract metadata
       tags:
       - contracts
@@ -814,7 +816,7 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Get My Profile
       tags:
       - profile
@@ -845,8 +847,13 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+      - AuthKey: []
       summary: Update Profile
       tags:
       - profile
+securityDefinitions:
+  AuthKey:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

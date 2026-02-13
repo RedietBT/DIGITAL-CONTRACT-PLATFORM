@@ -19,7 +19,7 @@ const docTemplateauth = `{
             "put": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Updates the status of a specific user. Requires admin privileges.",
@@ -79,7 +79,7 @@ const docTemplateauth = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Retrieves a list of all users in the system. Requires admin privileges.",
@@ -114,7 +114,7 @@ const docTemplateauth = `{
             "delete": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Deletes a user account. If no ID is provided, deletes the authenticated user.",
@@ -263,7 +263,7 @@ const docTemplateauth = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Logs out the authenticated user by invalidating the current session.",
@@ -300,7 +300,7 @@ const docTemplateauth = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Retrieves the profile information of the authenticated user.",
@@ -352,7 +352,7 @@ const docTemplateauth = `{
             "put": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Updates the email address of the authenticated user.",
@@ -412,7 +412,7 @@ const docTemplateauth = `{
             "put": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Updates the password of the authenticated user.",
@@ -634,7 +634,7 @@ const docTemplateauth = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Get all contracts owned by the authenticated user",
@@ -672,7 +672,7 @@ const docTemplateauth = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Creates a contract and initializes Version 1",
@@ -729,7 +729,7 @@ const docTemplateauth = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Retrieves contract details including versions and participants",
@@ -782,7 +782,7 @@ const docTemplateauth = `{
             "put": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Update title/description of a draft contract",
@@ -829,7 +829,7 @@ const docTemplateauth = `{
             "delete": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Hard delete a contract and its associated data",
@@ -866,7 +866,7 @@ const docTemplateauth = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Fetches the profile for the user identified by the JWT token.",
@@ -907,7 +907,7 @@ const docTemplateauth = `{
             "put": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "AuthKey": []
                     }
                 ],
                 "description": "Update your display name and bio.",
@@ -1305,6 +1305,13 @@ const docTemplateauth = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "AuthKey": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

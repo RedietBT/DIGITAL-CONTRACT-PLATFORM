@@ -165,7 +165,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 // @Summary      Get user profile
 // @Description  Retrieves the profile information of the authenticated user.
 // @Tags         default
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Produce      json
 // @Success      200  {object}  models.User "Successfully retrieved user profile"
 // @Failure      401  {object}  map[string]string "Unauthorized: User not found in context"
@@ -192,7 +192,7 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 // @Summary      Get all users (Admin only)
 // @Description  Retrieves a list of all users in the system. Requires admin privileges.
 // @Tags         admin
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Produce      json
 // @Success      200  {array}  models.User "Successfully retrieved list of users"
 // @Failure      500  {object}  map[string]string "Failed to retrieve users"
@@ -210,7 +210,7 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 // @Summary      Delete a user
 // @Description  Deletes a user account. If no ID is provided, deletes the authenticated user.
 // @Tags         admin
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Produce      json
 // @Param        id  query     string  false  "User ID to delete"
 // @Success      204 {object}  nil       "Successfully deleted user"
@@ -241,7 +241,7 @@ func (h *AuthHandler) DeleteMe(c *gin.Context) {
 // @Summary      Update own email
 // @Description  Updates the email address of the authenticated user.
 // @Tags         default
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Accept       json
 // @Produce      json
 // @Param        request  body      UpdateEmailRequest  true  "New Email Address"
@@ -269,7 +269,7 @@ func (h *AuthHandler) UpdateEmail(c *gin.Context) {
 // @Summary      Change own password
 // @Description  Updates the password of the authenticated user.
 // @Tags         auth
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Accept       json
 // @Produce      json
 // @Param        request  body      ChangePasswordRequest  true  "Old and New Passwords"
@@ -297,7 +297,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 // @Summary      Logout user
 // @Description  Logs out the authenticated user by invalidating the current session.
 // @Tags         default
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Produce      json
 // @Success      200  {object}  map[string]string "Success message"
 // @Failure      500  {object}  map[string]string "Failed to logout"
@@ -337,7 +337,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 // @Summary      Update user status (Admin only)
 // @Description  Updates the status of a specific user. Requires admin privileges.
 // @Tags         admin
-// @Security     BearerAuth
+// @Security     AuthKey
 // @Accept       json
 // @Produce      json
 // @Param        request  body      UpdateStatusRequest  true  "User ID and New Status"

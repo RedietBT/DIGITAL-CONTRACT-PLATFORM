@@ -43,7 +43,7 @@ type CreateContractRequest struct {
 // @Failure      400         {object} map[string]string
 // @Failure      500         {object} map[string]string
 // @Router       /contracts [post]
-// @Security     BearerAuth
+// @Security     AuthKey
 func (h *ContractHandler) CreateContract(c *gin.Context) {
 	// 1. GEt UserID from Middleware context
 	uidVal, _ := c.Get(middleware.UserIDKey)
@@ -96,7 +96,7 @@ func(h *ContractHandler) bindAndValidate(c *gin.Context, obj interface{}) error 
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /contracts/{id} [get]
-// @Security     BearerAuth
+// @Security     AuthKey
 func (h *ContractHandler) GetContract(c *gin.Context) {
 	contractsID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -122,7 +122,7 @@ func (h *ContractHandler) GetContract(c *gin.Context) {
 // @Success      200  {array}   models.Contract
 // @Failure      500  {object}  map[string]string
 // @Router       /contracts [get]
-// @Security     BearerAuth
+// @Security     AuthKey
 func (h *ContractHandler) ListContracts(c *gin.Context) {
 	uidVal, _ := c.Get(middleware.UserIDKey)
 	userID, _ := uuid.Parse(uidVal.(string))
@@ -152,7 +152,7 @@ type UpdateContractRequest struct {
 // @Param        contract  body      UpdateContractRequest  true  "Updated Data"
 // @Success      200       {object}  map[string]string
 // @Router       /contracts/{id} [put]
-// @Security     BearerAuth
+// @Security     AuthKey
 func(h *ContractHandler) UpdateContract(c *gin.Context) {
 	contractID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -185,7 +185,7 @@ func(h *ContractHandler) UpdateContract(c *gin.Context) {
 // @Param        id   path      string  true  "Contract ID"
 // @Success      200  {object}  map[string]string
 // @Router       /contracts/{id} [delete]
-// @Security     BearerAuth
+// @Security     AuthKey
 func (h *ContractHandler) DeleteContract(c *gin.Context) {
 	contractID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

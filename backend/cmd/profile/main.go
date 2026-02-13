@@ -22,10 +22,10 @@ import (
 // @description     Profile Service for the Digital Contract Platform.
 // @host            localhost:8082
 // @BasePath        /
-// @securityDefinitions.bearerAuth  BearerAuth
-// @type                            apiKey
-// @in              header
-// @name            Authorization
+// @securityDefinitions.apiKey AuthKey
+// @type                       apiKey
+// @in                         header
+// @name                       Authorization
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 	jwtSecret := os.Getenv("JWT_SECRET")

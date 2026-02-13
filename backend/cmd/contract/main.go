@@ -20,15 +20,14 @@ import (
 
 // @title           Digital Contract Platform - Contract Service
 // @version         1.0
+// @description Type your JWT token
 // @description     Service for managing digital contracts.
 // @host            localhost:8081
 // @BasePath        /
-
-// @securityDefinitions.bearerAuth BearerAuth
-// @type                            apiKey
-// @in header
-// @name Authorization
-// @description Type your JWT token
+// @securityDefinitions.apiKey AuthKey
+// @type                       apiKey
+// @in                         header
+// @name                       Authorization
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 	jwtSecret := os.Getenv("JWT_SECRET")
