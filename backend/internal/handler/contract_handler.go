@@ -160,9 +160,18 @@ func(h *ContractHandler) UpdateContract(c *gin.Context) {
 		return
 	}
 
-	uidVal, _ := c.Get(middleware.UserIDKey)
-	userID, _ := uuid.Parse(uidVal.(string))
-
+	uidVal, exists := c.Get(middleware.UserIDKey)
+	if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+        return
+    }
+	
+	userID, ok := uidVal.(uuid.UUID)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal context error"})
+        return
+    }
+	
 	var req UpdateContractRequest
 	if err := h.bindAndValidate(c, &req); err != nil {
 		return

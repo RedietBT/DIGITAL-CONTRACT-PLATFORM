@@ -3,14 +3,15 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
+	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/contract/docs"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/handler"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/service"
-	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/contract/docs"
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -68,6 +69,9 @@ func main() {
 	repo := repository.NewContractRepository(db)
 	svc := service.NewContractService(repo)
 	validate := validator.New()
+	validate.RegisterValidation("no_scripts", func(fl validator.FieldLevel) bool {
+    return !strings.Contains(strings.ToLower(fl.Field().String()), "<script>")
+    })
 	h := handler.NewContractHandler(svc, validate)
 
 	// Intialixe & Start RabbitMQ Consumer

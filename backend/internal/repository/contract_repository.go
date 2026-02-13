@@ -61,7 +61,7 @@ func (r *contractRepository) GetContractsByUserID(ctx context.Context, userID uu
 // UpdateContract updates the main contract metadata
 func (r *contractRepository) UpdateContract(ctx context.Context, contract *models.Contract) error {
 	// Updates() in GORM automatically handles the "updated_at" timestamp
-	return r.db.WithContext(ctx).Save(contract).Error
+	return r.db.WithContext(ctx).Updates(contract).Error
 }
 
 // DeleteContract performs a hard delete of the contract
