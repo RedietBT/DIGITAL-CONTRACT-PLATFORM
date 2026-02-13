@@ -46,35 +46,44 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	 c.JSON(http.StatusOK, profile)
 }
 
-// UpdateProfile updates the authenticated user's profile
+// UpdateProfileRequest defines exactly what a user can change
+type UpdateProfileRequest struct {
+    DisplayName string `json:"display_name" validate:"required,min=2,no_scripts"`
+    Bio         string `json:"bio" validate:"max=500,no_scripts"`
+}
+
+// UpdateProfile godoc
 // @Summary      Update Profile
-// @Description  Allows the user to update their display name, bio, and other details.
+// @Description  Update your display name and bio.
 // @Tags         profile
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        profile  body      models.Profile  true  "Profile data"
-// @Success      200      {object}  map[string]string "message"
-// @Failure      400      {object}  map[string]string "Invalid input"
+// @Param        profile  body      UpdateProfileRequest  true  "Profile update data"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
 // @Router       /profile/me [put]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
-	userID, _ := c.Get("userID")
-	
-	var req models.Profile
+    userID, _ := c.Get("userID") // Get from standardized key
 
-	// 4. VALDATE: c.ShouldBindJSON checks the "json" tags and "binding" tags in  your model
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
-		return
-	} 
+    var req UpdateProfileRequest
+    // Bind to the DTO instead of the full Model
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format: check your fields"})
+        return
+    }
 
-	// SECURITY: Ensure the user can only update their own profile by forcing the ID
-	req.UserID = userID.(string)
+    // Map the safe fields to your profile model
+    profile := &models.Profile{
+        UserID:      userID.(string),
+        DisplayName: req.DisplayName,
+        Bio:         req.Bio,
+    }
 
-	if err := h.svc.UpdateProfile(c.Request.Context(), &req); err != nil{
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
-		return
-	}
+    if err := h.svc.UpdateProfile(c.Request.Context(), profile); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"message": "profile updated successfully"})
+    c.JSON(http.StatusOK, gin.H{"message": "profile updated successfully"})
 }

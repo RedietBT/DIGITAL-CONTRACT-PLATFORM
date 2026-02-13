@@ -103,6 +103,17 @@ definitions:
     required:
     - new_email
     type: object
+  handler.UpdateProfileRequest:
+    properties:
+      bio:
+        maxLength: 500
+        type: string
+      display_name:
+        minLength: 2
+        type: string
+    required:
+    - display_name
+    type: object
   handler.UpdateStatusRequest:
     properties:
       status:
@@ -810,25 +821,25 @@ paths:
     put:
       consumes:
       - application/json
-      description: Allows the user to update their display name, bio, and other details.
+      description: Update your display name and bio.
       parameters:
-      - description: Profile data
+      - description: Profile update data
         in: body
         name: profile
         required: true
         schema:
-          $ref: '#/definitions/models.Profile'
+          $ref: '#/definitions/handler.UpdateProfileRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: message
+          description: OK
           schema:
             additionalProperties:
               type: string
             type: object
         "400":
-          description: Invalid input
+          description: Bad Request
           schema:
             additionalProperties:
               type: string

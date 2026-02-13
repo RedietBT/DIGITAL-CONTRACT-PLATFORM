@@ -1,3 +1,4 @@
+basePath: /
 definitions:
   handler.ChangePasswordRequest:
     properties:
@@ -101,6 +102,17 @@ definitions:
         type: string
     required:
     - new_email
+    type: object
+  handler.UpdateProfileRequest:
+    properties:
+      bio:
+        maxLength: 500
+        type: string
+      display_name:
+        minLength: 2
+        type: string
+    required:
+    - display_name
     type: object
   handler.UpdateStatusRequest:
     properties:
@@ -228,8 +240,12 @@ definitions:
       updated_at:
         type: string
     type: object
+host: localhost:8081
 info:
   contact: {}
+  description: Type 'Bearer ' followed by your JWT token.
+  title: Digital Contract Platform - Contract Service
+  version: "1.0"
 paths:
   /auth/admin/user-status:
     put:
@@ -265,7 +281,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update user status (Admin only)
       tags:
       - admin
@@ -290,7 +306,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete a user
       tags:
       - admin
@@ -312,7 +328,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get all users (Admin only)
       tags:
       - admin
@@ -408,7 +424,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Logout user
       tags:
       - default
@@ -441,7 +457,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get user profile
       tags:
       - default
@@ -479,7 +495,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update own email
       tags:
       - default
@@ -517,7 +533,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Change own password
       tags:
       - auth
@@ -798,38 +814,38 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get My Profile
       tags:
       - profile
     put:
       consumes:
       - application/json
-      description: Allows the user to update their display name, bio, and other details.
+      description: Update your display name and bio.
       parameters:
-      - description: Profile data
+      - description: Profile update data
         in: body
         name: profile
         required: true
         schema:
-          $ref: '#/definitions/models.Profile'
+          $ref: '#/definitions/handler.UpdateProfileRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: message
+          description: OK
           schema:
             additionalProperties:
               type: string
             type: object
         "400":
-          description: Invalid input
+          description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update Profile
       tags:
       - profile
