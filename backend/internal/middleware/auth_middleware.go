@@ -23,7 +23,10 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		tokenString := authHeader
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+		}
 
 		// 2. Parse and validate
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {

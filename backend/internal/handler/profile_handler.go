@@ -20,7 +20,7 @@ func NewProfileHandler(svc service.ProfileService) *ProfileHandler {
 // @Summary      Get My Profile
 // @Description  Fetches the profile for the user identified by the JWT token.
 // @Tags         profile
-// @Security     ApiKeyAuth
+// @Security     BearerAuth
 // @Produce      json
 // @Success      200  {object}  models.Profile
 // @Failure      401  {object}  map[string]string "Unauthorized"
@@ -50,7 +50,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 // @Summary      Update Profile
 // @Description  Allows the user to update their display name, bio, and other details.
 // @Tags         profile
-// @Security     ApiKeyAuth
+// @Security     BearerAuth
 // @Accept       json
 // @Produce      json
 // @Param        profile  body      models.Profile  true  "Profile data"

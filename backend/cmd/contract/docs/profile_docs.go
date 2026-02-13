@@ -19,7 +19,7 @@ const docTemplateprofile = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Updates the status of a specific user. Requires admin privileges.",
@@ -79,7 +79,7 @@ const docTemplateprofile = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Retrieves a list of all users in the system. Requires admin privileges.",
@@ -114,7 +114,7 @@ const docTemplateprofile = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Deletes a user account. If no ID is provided, deletes the authenticated user.",
@@ -263,7 +263,7 @@ const docTemplateprofile = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Logs out the authenticated user by invalidating the current session.",
@@ -300,7 +300,7 @@ const docTemplateprofile = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Retrieves the profile information of the authenticated user.",
@@ -352,7 +352,7 @@ const docTemplateprofile = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Updates the email address of the authenticated user.",
@@ -412,7 +412,7 @@ const docTemplateprofile = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Updates the password of the authenticated user.",
@@ -866,7 +866,7 @@ const docTemplateprofile = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Fetches the profile for the user identified by the JWT token.",
@@ -907,7 +907,7 @@ const docTemplateprofile = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Allows the user to update their display name, bio, and other details.",
@@ -1295,12 +1295,12 @@ const docTemplateprofile = `{
 
 // SwaggerInfoprofile holds exported Swagger Info so clients can modify it
 var SwaggerInfoprofile = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8081",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Digital Contract Platform API (Contract)",
+	Description:      "Contract Service with RabbitMQ & Gin.",
 	InfoInstanceName: "profile",
 	SwaggerTemplate:  docTemplateprofile,
 	LeftDelim:        "{{",

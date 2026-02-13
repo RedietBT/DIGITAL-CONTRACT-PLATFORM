@@ -229,11 +229,11 @@ definitions:
       updated_at:
         type: string
     type: object
-host: localhost:8081
+host: localhost:8080
 info:
   contact: {}
-  description: Contract Service with RabbitMQ & Gin.
-  title: Digital Contract Platform API (Contract)
+  description: Auth Service with RabbitMQ & Gin.
+  title: Digital Contract Platform API (Auth)
   version: "1.0"
 paths:
   /auth/admin/user-status:

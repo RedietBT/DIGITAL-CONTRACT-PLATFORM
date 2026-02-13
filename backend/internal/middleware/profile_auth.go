@@ -22,14 +22,15 @@ func ProfileAuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		// 2. SANITIZE: Spilt the string "Bareer <token>" to get just the token part.
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
+		tokenString := authHeader
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+		} else if strings.Contains(authHeader, " ") {
+			// If it has a space but isn't "Bearer", it's definitely wrong
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
 			c.Abort()
 			return
-		} 
-
-		tokenString := parts[1]
+		}
 		
 		// 3. VERIFY: We parse the token. 
         // The second argument is a "KeyFunc" where we provide our secret to verify the signature.
@@ -51,10 +52,15 @@ func ProfileAuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		// 5. INJECT: This is the most important part of Gin.
         // We extract the "sub" (UserID) from the token claims.
         if claims, ok := token.Claims.(jwt.MapClaims); ok {
-            userID := claims["sub"].(string)
+            userID, ok := claims["sub"].(string)
+			if !ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+				c.Abort()
+				return
+			}
             
             // c.Set(key, value) stores the ID in Gin's local context for THIS specific request.
-            c.Set("user_id", userID) 
+            c.Set("userID", userID) 
         }
 
 		// 6. PROCEED: If everything is fine, let the request continue to the handler.

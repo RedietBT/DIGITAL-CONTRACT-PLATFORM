@@ -18,6 +18,14 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Digital Contract Platform API (Contract)
+// @version         1.0
+// @description     Contract Service with RabbitMQ & Gin.
+// @host            localhost:8081
+// @BasePath        /
+// @securityDefinitions.bearerAuth  BearerAuth
+// @in              header
+// @name            Authorization
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 	jwtSecret := os.Getenv("JWT_SECRET")

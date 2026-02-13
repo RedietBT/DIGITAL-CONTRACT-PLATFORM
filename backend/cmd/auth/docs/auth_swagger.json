@@ -1,12 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Contract Service with RabbitMQ \u0026 Gin.",
-        "title": "Digital Contract Platform API (Contract)",
+        "description": "Auth Service with RabbitMQ \u0026 Gin.",
+        "title": "Digital Contract Platform API (Auth)",
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8081",
+    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/auth/admin/user-status": {

@@ -22,7 +22,7 @@ import (
 // @description     Auth Service with RabbitMQ & Gin.
 // @host            localhost:8080
 // @BasePath        /
-// @securityDefinitions.apikey ApiKeyAuth
+// @securityDefinitions.bearerAuth  BearerAuth
 // @in              header
 // @name            Authorization
 func main() {

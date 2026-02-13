@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/middleware"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
@@ -17,13 +18,18 @@ type ContractHandler struct {
 }
 
 func NewContractHandler(svc service.ContractService, v *validator.Validate) *ContractHandler {
+	// Register the custom "no_scripts" validation
+    v.RegisterValidation("no_scripts", func(fl validator.FieldLevel) bool {
+        // Returns false if the string contains a script tag
+        return !strings.Contains(strings.ToLower(fl.Field().String()), "<script")
+    })
 	return &ContractHandler{svc: svc, validate: v}
 }
 
 type CreateContractRequest struct {
-	Title       string `json:"title" validate:"required,min=3"`
-	Description string `json:"description" validate:"required,min=3,max=1000"`
-	Content     string `json:"content" validate:"required"` // Initial version text
+	Title       string `json:"title" validate:"required,min=3,no_scripts"`
+	Description string `json:"description" validate:"required,min=3,max=1000,no_scripts"`
+	Content     string `json:"content" validate:"required,no_scripts"` // Initial version text
 }
 
 //CreateContract godoc

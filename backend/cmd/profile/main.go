@@ -22,7 +22,7 @@ import (
 // @description     Profile Service for the Digital Contract Platform.
 // @host            localhost:8082
 // @BasePath        /
-// @securityDefinitions.apikey ApiKeyAuth
+// @securityDefinitions.bearerAuth  BearerAuth
 // @in              header
 // @name            Authorization
 func main() {
