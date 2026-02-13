@@ -3,7 +3,7 @@ package docs
 
 import "github.com/swaggo/swag"
 
-const docTemplateauth = `{
+const docTemplate = `{
     "schemes": {{ marshal .Schemes }},
     "swagger": "2.0",
     "info": {
@@ -1316,20 +1316,20 @@ const docTemplateauth = `{
     }
 }`
 
-// SwaggerInfoauth holds exported Swagger Info so clients can modify it
-var SwaggerInfoauth = &swag.Spec{
+// SwaggerInfo holds exported Swagger Info so clients can modify it
+var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:8082",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Digital Contract Platform API (Auth)",
-	Description:      "Auth Service with RabbitMQ & Gin.",
-	InfoInstanceName: "auth",
-	SwaggerTemplate:  docTemplateauth,
+	Title:            "Digital Contract Platform - Profile Service",
+	Description:      "Profile Service for the Digital Contract Platform.",
+	InfoInstanceName: "swagger",
+	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",
 }
 
 func init() {
-	swag.Register(SwaggerInfoauth.InstanceName(), SwaggerInfoauth)
+	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }
