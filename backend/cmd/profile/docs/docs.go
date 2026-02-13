@@ -910,7 +910,7 @@ const docTemplate = `{
                         "AuthKey": []
                     }
                 ],
-                "description": "Update your display name and bio.",
+                "description": "Update your display name, bio, and seller settings.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1106,7 +1106,9 @@ const docTemplate = `{
         "handler.UpdateProfileRequest": {
             "type": "object",
             "required": [
-                "display_name"
+                "display_name",
+                "is_template_seller",
+                "skill_level"
             ],
             "properties": {
                 "bio": {
@@ -1116,6 +1118,13 @@ const docTemplate = `{
                 "display_name": {
                     "type": "string",
                     "minLength": 2
+                },
+                "is_template_seller": {
+                    "type": "boolean"
+                },
+                "skill_level": {
+                    "type": "integer",
+                    "minimum": 2
                 }
             }
         },

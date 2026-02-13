@@ -72,21 +72,24 @@ func (r *profileRepository) GetProfileByID(ctx context.Context, userID string) (
 // UpdateProfile updates an existing profile details.
 // Note: We don't update update_at here because it's automatically updated by the database. 
 func (r *profileRepository) UpdateProfile(ctx context.Context, p *models.Profile) error {
-	query := `
-		UPDATE profile_schema.profiles
-		SET display_name = $1, bio = $2, skill_level = $3, is_template_seller = $4
-		WHERE user_id = $5
-	`
+    query := `
+        UPDATE profile_schema.profiles
+        SET display_name = $1, 
+            bio = $2, 
+            skill_level = $3, 
+            is_template_seller = $4
+        WHERE user_id = $5
+    `
 
-	_, err := r.db.ExecContext(ctx, query,
-		p.DisplayName,
-		p.DisplayName,
-		p.Bio,
-		p.SkillLevel,
-		p.IsTemplateSeller,
-		p.UserID,
-	)
-	return err
+    // Fixed: Removed the duplicate DisplayName and matched the 5 arguments
+    _, err := r.db.ExecContext(ctx, query,
+        p.DisplayName,      // $1
+        p.Bio,              // $2
+        p.SkillLevel,       // $3
+        p.IsTemplateSeller, // $4
+        p.UserID,           // $5
+    )
+    return err
 }
 
 // DeleteProfile removes profile.

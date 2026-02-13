@@ -13,6 +13,7 @@ import (
 	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/contract/docs"
 	pkgBroker "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/pkg/broker"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 	"github.com/go-playground/validator/v10"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -96,6 +97,11 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "Contract Service is running"})
 	})
+
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true // For development only
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	r.Use(cors.New(config))
 
 	// Protected Contract Routes
 	// We use the custom ContractAuthMiddleware to protect these routes

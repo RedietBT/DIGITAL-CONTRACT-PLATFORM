@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
@@ -48,13 +49,15 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 
 // UpdateProfileRequest defines exactly what a user can change
 type UpdateProfileRequest struct {
-    DisplayName string `json:"display_name" validate:"required,min=2,no_scripts"`
-    Bio         string `json:"bio" validate:"max=500,no_scripts"`
+    DisplayName      string `json:"display_name" validate:"required,min=2,no_scripts"`
+    Bio              string `json:"bio" validate:"max=500,no_scripts"`
+	SkillLevel       int `json:"skill_level" validate:"required,min=2,no_scripts"`     
+    IsTemplateSeller bool   `json:"is_template_seller" validate:"required,min=2,no_scripts"`
 }
 
 // UpdateProfile godoc
 // @Summary      Update Profile
-// @Description  Update your display name and bio.
+// @Description  Update your display name, bio, and seller settings.
 // @Tags         profile
 // @Security     AuthKey
 // @Accept       json
@@ -64,23 +67,33 @@ type UpdateProfileRequest struct {
 // @Failure      400      {object}  map[string]string
 // @Router       /profile/me [put]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
-    userID, _ := c.Get("userID") // Get from standardized key
+    // 1. Get UserID from Middleware
+    userID, exists := c.Get("userID") 
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "user not identified"})
+        return
+    }
 
+    // 2. Bind Request Body
     var req UpdateProfileRequest
-    // Bind to the DTO instead of the full Model
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format: check your fields"})
         return
     }
 
-    // Map the safe fields to your profile model
+    // 3. Map Fields to Model (Crucial: Match your Repo's $1-$5)
     profile := &models.Profile{
-        UserID:      userID.(string),
-        DisplayName: req.DisplayName,
-        Bio:         req.Bio,
+        UserID:           userID.(string),
+        DisplayName:      req.DisplayName,
+        Bio:              req.Bio,
+        SkillLevel:       req.SkillLevel,       
+        IsTemplateSeller: req.IsTemplateSeller, 
     }
 
+    // 4. Call Service
     if err := h.svc.UpdateProfile(c.Request.Context(), profile); err != nil {
+        // Log the actual error to terminal so you can see if SQL fails
+        log.Printf("UpdateProfile Error: %v", err) 
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
         return
     }
