@@ -87,8 +87,11 @@ func main() {
 	// Gin Engine Setup
 	r := gin.Default()
 
-	// Add CORS Middleware
-	r.Use(middleware.CORSMiddleware())
+    config := cors.DefaultConfig()
+    config.AllowAllOrigins = true 
+    config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+    config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+    r.Use(cors.New(config))
 
 	// Swagger & Health Check (Public)
 	// Replace your existing r.GET("/swagger/*any", ...) with this:
@@ -97,11 +100,6 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "Contract Service is running"})
 	})
-
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true // For development only
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	r.Use(cors.New(config))
 
 	// Protected Contract Routes
 	// We use the custom ContractAuthMiddleware to protect these routes
