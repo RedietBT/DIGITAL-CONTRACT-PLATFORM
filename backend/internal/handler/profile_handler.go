@@ -28,7 +28,7 @@ func NewProfileHandler(svc service.ProfileService) *ProfileHandler {
 // @Router       /profile/me [get]
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	// 1. EXTRACT: pull the ID from the "bucket" filled by profileAuthMiddleWare
-	 userID, exists := c.Get("user_id")
+	 userID, exists := c.Get("userID")
 	 if !exists {
 		// This should theorectically never happen if middleware is working
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user_id missing from context"})
@@ -58,7 +58,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 // @Failure      400      {object}  map[string]string "Invalid input"
 // @Router       /profile/me [put]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, _ := c.Get("userID")
 	
 	var req models.Profile
 

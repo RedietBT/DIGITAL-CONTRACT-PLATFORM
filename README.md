@@ -15,7 +15,7 @@ Run the following commands to update the blueprints for the Global Swagger UI:
 ```bash
 swag init -g cmd/auth/main.go -o cmd/auth/docs --instanceName auth
 swag init -g cmd/profile/main.go -o cmd/profile/docs --instanceName profile
-swag init -g cmd/contract/main.go -o cmd/contract/docs --instanceName profile
+swag init -g cmd/contract/main.go -o cmd/contract/docs --instanceName contract
 
 ```
 
