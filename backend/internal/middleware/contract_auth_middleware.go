@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // ContractMiddleware accepts the secret needed to decode the JWT
@@ -53,9 +54,16 @@ func ContractMiddleware(jwtSecret string) gin.HandlerFunc {
 		// 5. INJECT: This is the most important part of Gin
 		//We extract the "sub" (UserID) from the token claims.
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			userID, ok := claims["sub"].(string)
+			sub, ok := claims["sub"].(string)
 			if !ok {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+				c.Abort()
+				return
+			}
+			// Convert string to UUID right here!
+			userID, err := uuid.Parse(sub)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid User ID format"})
 				c.Abort()
 				return
 			}
