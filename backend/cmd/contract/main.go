@@ -27,7 +27,7 @@ import (
 // @securityDefinitions.bearerAuth BearerAuth
 // @in header
 // @name Authorization
-// @description Type 'Bearer ' followed by your JWT token.
+// @description Type your JWT token
 func main() {
 	dsn := os.Getenv("DATABASE_DSN")
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -90,7 +90,8 @@ func main() {
 	r.Use(middleware.CORSMiddleware())
 
 	// Swagger & Health Check (Public)
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Replace your existing r.GET("/swagger/*any", ...) with this:
+r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("http://localhost:8081/swagger/doc.json")))
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "Contract Service is running"})
 	})

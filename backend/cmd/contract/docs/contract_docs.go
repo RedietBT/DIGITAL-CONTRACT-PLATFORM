@@ -910,7 +910,7 @@ const docTemplatecontract = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Allows the user to update their display name, bio, and other details.",
+                "description": "Update your display name and bio.",
                 "consumes": [
                     "application/json"
                 ],
@@ -923,18 +923,18 @@ const docTemplatecontract = `{
                 "summary": "Update Profile",
                 "parameters": [
                     {
-                        "description": "Profile data",
+                        "description": "Profile update data",
                         "name": "profile",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/handler.UpdateProfileRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "message",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -943,7 +943,7 @@ const docTemplatecontract = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid input",
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1100,6 +1100,22 @@ const docTemplatecontract = `{
             "properties": {
                 "new_email": {
                     "type": "string"
+                }
+            }
+        },
+        "handler.UpdateProfileRequest": {
+            "type": "object",
+            "required": [
+                "display_name"
+            ],
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "display_name": {
+                    "type": "string",
+                    "minLength": 2
                 }
             }
         },
@@ -1299,8 +1315,8 @@ var SwaggerInfocontract = &swag.Spec{
 	Host:             "localhost:8081",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Digital Contract Platform API (Contract)",
-	Description:      "Contract Service with RabbitMQ & Gin.",
+	Title:            "Digital Contract Platform - Contract Service",
+	Description:      "Type 'Bearer ' followed by your JWT token.",
 	InfoInstanceName: "contract",
 	SwaggerTemplate:  docTemplatecontract,
 	LeftDelim:        "{{",
