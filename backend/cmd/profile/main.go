@@ -23,6 +23,7 @@ import (
 // @host            localhost:8082
 // @BasePath        /
 // @securityDefinitions.bearerAuth  BearerAuth
+// @type                            apiKey
 // @in              header
 // @name            Authorization
 func main() {

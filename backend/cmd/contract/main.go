@@ -25,6 +25,7 @@ import (
 // @BasePath        /
 
 // @securityDefinitions.bearerAuth BearerAuth
+// @type                            apiKey
 // @in header
 // @name Authorization
 // @description Type your JWT token
@@ -91,7 +92,8 @@ func main() {
 
 	// Swagger & Health Check (Public)
 	// Replace your existing r.GET("/swagger/*any", ...) with this:
-r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("http://localhost:8081/swagger/doc.json")))
+	// Replace the complex WrapHandler with this in all 3 main.go files
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "Contract Service is running"})
 	})
