@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
@@ -32,14 +33,16 @@ func (s *contractService) CreateContract(ctx context.Context, contract *models.C
 	contract.CurrentVersion = 1
 	contract.Status = "draft"
 
+	// WRAP the string in a JSON object so Postgres JSONB accepts it
+    jsonContent := fmt.Sprintf(`{"content": "%s"}`, initialContent)
+
 	// 2. Initialize the first version snapshot
 	firstVersion := models.ContractVersion{
-		VersionNumber: 1,
-		ContentJSON: []byte(initialContent),
-		CreatedBy: contract.OwnerUserID,
-	}
-	contract.Versions = append(contract.Versions, firstVersion)
-
+        VersionNumber: 1,
+        ContentJSON:   []byte(jsonContent), // Now it's valid JSON
+        CreatedBy:     contract.OwnerUserID,
+    }
+    contract.Versions = append(contract.Versions, firstVersion)
 	// 3. Save via Repo
 	return s.repo.CreateContract(ctx, contract)
 }

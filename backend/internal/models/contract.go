@@ -57,3 +57,16 @@ type ContractSignatureRequirement struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+// Add these to the bottom of your models file
+func (Contract) TableName() string {
+    return "contract_schema.contracts"
+}
+
+func (ContractVersion) TableName() string {
+    return "contract_schema.contract_versions"
+}
+
+func (ContractParticipant) TableName() string {
+    return "contract_schema.contract_participants"
+}
+
