@@ -1316,7 +1316,7 @@ var SwaggerInfocontract = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Digital Contract Platform - Contract Service",
-	Description:      "Type 'Bearer ' followed by your JWT token.",
+	Description:      "Type your JWT token",
 	InfoInstanceName: "contract",
 	SwaggerTemplate:  docTemplatecontract,
 	LeftDelim:        "{{",

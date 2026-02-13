@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Type 'Bearer ' followed by your JWT token.",
+        "description": "Type your JWT token",
         "title": "Digital Contract Platform - Contract Service",
         "contact": {},
         "version": "1.0"
