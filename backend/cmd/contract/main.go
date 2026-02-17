@@ -23,7 +23,7 @@ import (
 // @version         1.0
 // @description Type your JWT token
 // @description     Service for managing digital contracts.
-// @host            localhost:8081
+// @host            localhost:8083
 // @BasePath        /
 // @securityDefinitions.apiKey AuthKey
 // @type                       apiKey
