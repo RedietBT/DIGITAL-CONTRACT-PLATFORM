@@ -47,7 +47,11 @@ type CreateContractRequest struct {
 func (h *ContractHandler) CreateContract(c *gin.Context) {
 	// 1. GEt UserID from Middleware context
 	uidVal, _ := c.Get(middleware.UserIDKey)
-	userID, _ := uuid.Parse(uidVal.(string))
+	userID, ok := uidVal.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal context error"})
+		return
+	}
 
 
 	// 2. Bind JSON to request struct
@@ -98,19 +102,36 @@ func(h *ContractHandler) bindAndValidate(c *gin.Context, obj interface{}) error 
 // @Router       /contracts/{id} [get]
 // @Security     AuthKey
 func (h *ContractHandler) GetContract(c *gin.Context) {
-	contractsID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
+    // 1. Parse the Contract ID from the URL (This MUST be parsed because it's a string in the URL)
+    contractID, err := uuid.Parse(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Contract ID format"})
+        return
+    }
 
-	contract, err := h.svc.GetContractDetails(c.Request.Context(), contractsID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve contract"})
-		return
-	}
+    // 2. Get the Authenticated User ID from context (NO parsing needed here)
+    uidVal, _ := c.Get(middleware.UserIDKey)
+    userID, ok := uidVal.(uuid.UUID)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal context error"})
+        return
+    }
 
-	c.JSON(http.StatusOK, contract)
+    // 3. Call Service
+    // Pass BOTH IDs so the service can check if the User owns/is part of the contract
+    contract, err := h.svc.GetContractDetails(c.Request.Context(), contractID)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Contract not found"})
+        return
+    }
+
+    // 4. Security Check (Optional but recommended)
+    if contract.OwnerUserID != userID {
+         c.JSON(http.StatusForbidden, gin.H{"error": "You do not have access to this contract"})
+         return
+    }
+
+    c.JSON(http.StatusOK, contract)
 }
 
 // ListContracts godoc
@@ -124,8 +145,13 @@ func (h *ContractHandler) GetContract(c *gin.Context) {
 // @Router       /contracts [get]
 // @Security     AuthKey
 func (h *ContractHandler) ListContracts(c *gin.Context) {
-	uidVal, _ := c.Get(middleware.UserIDKey)
-	userID, _ := uuid.Parse(uidVal.(string))
+	 // 1. Get the Authenticated User ID from context (NO parsing needed here)
+    uidVal, _ := c.Get(middleware.UserIDKey)
+    userID, ok := uidVal.(uuid.UUID)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal context error"})
+        return
+    }
 
 	contracts, err := h.svc.ListUserContracts(c.Request.Context(), userID)
 	if err != nil {
@@ -165,7 +191,7 @@ func(h *ContractHandler) UpdateContract(c *gin.Context) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
         return
     }
-	
+
 	userID, ok := uidVal.(uuid.UUID)
     if !ok {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal context error"})
@@ -202,8 +228,12 @@ func (h *ContractHandler) DeleteContract(c *gin.Context) {
 		return
 	}
 
-	uidVal, _ := c.Get(middleware.UserIDKey)
-	userID, _ := uuid.Parse(uidVal.(string))
+	 uidVal, _ := c.Get(middleware.UserIDKey)
+	 userID, ok := uidVal.(uuid.UUID)
+	 if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal context error"})
+        return
+	}
 
 	err = h.svc.DeleteContract(c.Request.Context(), contractID, userID)
 	if err != nil {

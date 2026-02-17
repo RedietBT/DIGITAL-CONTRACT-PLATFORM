@@ -69,7 +69,7 @@ services:
       rabbitmq:
         condition: service_healthy 
     ports:
-      - "8081:8081"
+      - "8083:8083"
 
   profile-service:
     build:

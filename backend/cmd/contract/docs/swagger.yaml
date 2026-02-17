@@ -111,8 +111,15 @@ definitions:
       display_name:
         minLength: 2
         type: string
+      is_template_seller:
+        type: boolean
+      skill_level:
+        minimum: 2
+        type: integer
     required:
     - display_name
+    - is_template_seller
+    - skill_level
     type: object
   handler.UpdateStatusRequest:
     properties:
@@ -823,7 +830,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update your display name and bio.
+      description: Update your display name, bio, and seller settings.
       parameters:
       - description: Profile update data
         in: body

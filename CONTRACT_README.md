@@ -18,5 +18,5 @@ As per the platform's data consistency policy:
 * **UserDeletedEvent**: When a user is removed via the Auth service, this service consumes the event and purges all contracts owned by that `userID` to prevent orphaned data.
 
 ## 🧪 Testing with Swagger
-* **Local URL**: `http://localhost:8081/swagger/index.html`
+* **Local URL**: `http://localhost:8083/swagger/index.html`
 * **Requirements**: Must provide a `Bearer <token>` in the Authorization header.

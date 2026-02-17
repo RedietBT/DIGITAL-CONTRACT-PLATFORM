@@ -112,9 +112,9 @@ func main() {
 		contractRoutes.DELETE("/:id", h.DeleteContract)
 	}
 
-	log.Println("🚀 Contract Service listening on :8081")
+	log.Println("🚀 Contract Service listening on :8083")
 	//This rplaces 'select{}' and keeps the app runing
-	if err := r.Run(":8081"); err != nil{
+	if err := r.Run(":8083"); err != nil{
 		log.Fatalf("❌ Server failed: %v", err)
 	}
 }

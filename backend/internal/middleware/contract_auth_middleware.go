@@ -60,6 +60,7 @@ func ContractMiddleware(jwtSecret string) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
+
 			// Convert string to UUID right here!
 			userID, err := uuid.Parse(sub)
 			if err != nil {
@@ -67,9 +68,8 @@ func ContractMiddleware(jwtSecret string) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			
-			//c.Set(key, value) stores the ID in Gin's local context for THIS specific request.
-			c.Set("userID", userID)
+    
+			c.Set("userID", userID) // Now it's a uuid.UUID object!
 		}
 
 		// 6. PROCEED: If everything is fine, let the request continue to the handler.

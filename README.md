@@ -4,7 +4,7 @@ A high-performance, microservices-based platform for managing digital agreements
 
 ## 🏗️ System Architecture
 * **Auth Service (`:8080`)**: Identity management and JWT issuance.
-* **Contract Service (`:8081`)**: Document lifecycle and versioning.
+* **Contract Service (`:8083`)**: Document lifecycle and versioning.
 * **Profile Service (`:8082`)**: User metadata and personal details.
 * **Global Swagger (`:8085`)**: Centralized API documentation for all services.
 
