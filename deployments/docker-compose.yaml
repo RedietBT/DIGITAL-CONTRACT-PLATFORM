@@ -98,7 +98,7 @@ services:
       # This is the magic part: it tells the UI where to find each service's JSON file
       URLS: "[ 
         { url: 'http://localhost:8080/swagger/doc.json', name: 'Auth Service' }, 
-        { url: 'http://localhost:8081/swagger/doc.json', name: 'Contract Service' }, 
+        { url: 'http://localhost:8083/swagger/doc.json', name: 'Contract Service' }, 
         { url: 'http://localhost:8082/swagger/doc.json', name: 'Profile Service' } 
       ]"
     depends_on:
