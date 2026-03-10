@@ -15,6 +15,7 @@ type Signature struct {
 	SignatureType   string       `gorm:"type:varchar(50);not null"` // e.g., 'drawn', 'typed'
 
 	// VectorData stores the coordinates/paths as JSONB
+	FileURL         string        `gorm:"type:text"`
 	VectorData      json.RawMessage `gorm:"type:jsonb"`
 	Hash            string          `gorm:"type:varchar(255)"` // SHA-256 for integrity
 

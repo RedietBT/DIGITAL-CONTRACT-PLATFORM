@@ -7,7 +7,7 @@ CREATE TABLE signature_schema.signature_types (
     name VARCHAR(50) NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 -- 3. Insert Default Types
 INSERT INTO signature_schema.signature_types (code name) VALUES
@@ -45,7 +45,7 @@ CREATE TABLE signature_schema.signatures (
 
     -- Constraints
     CONSTRAINT positive_dimensions CHECK (width > 0 AND height > 0)
-)
+);
 
 
 -- 5. Indexes for performance
