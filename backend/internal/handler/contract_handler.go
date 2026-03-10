@@ -23,6 +23,14 @@ func NewContractHandler(svc service.ContractService, v *validator.Validate) *Con
         // Returns false if the string contains a script tag
         return !strings.Contains(strings.ToLower(fl.Field().String()), "<script")
     })
+
+	// 2. Register "alphanum_start"
+	v.RegisterValidation("alphanum_start", func (fl validator.FieldLevel ) bool{
+		s := fl.Field().String()
+		if len(s) == 0 {return true}
+		first := s[0]
+		return (first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z') || (first >= '0' && first <= '9')
+	})
 	return &ContractHandler{svc: svc, validate: v}
 }
 

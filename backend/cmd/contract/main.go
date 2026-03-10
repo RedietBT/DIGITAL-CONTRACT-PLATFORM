@@ -72,14 +72,6 @@ func main() {
 	validate.RegisterValidation("no_scripts", func(fl validator.FieldLevel) bool {
     return !strings.Contains(strings.ToLower(fl.Field().String()), "<script>")
     })
-
-	validate.RegisterValidation("alphanum_start", func(fl validator.FieldLevel) bool {
-        s := fl.Field().String()
-        if len(s) == 0 { return true }
-        first := s[0]
-        return (first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z') || (first >= '0' && first <= '9')
-    })
-	
 	h := handler.NewContractHandler(svc, validate)
 
 	// Intialixe & Start RabbitMQ Consumer
