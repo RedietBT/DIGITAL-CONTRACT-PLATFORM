@@ -14,11 +14,11 @@ type SignatureConsumer struct {
 	repo repository.SignatureRepository
 }
 
-func NewSignatureConsumer(conn *amqp.Connection, repo repository.SignatureRepository) *SignatureConsumer {
+func NewSignatureConsumer(conn *amqp.Connection, repo repository.SignatureRepository) (*SignatureConsumer, error) {
 	return &SignatureConsumer{
 		conn: conn, 
 		repo: repo,
-	}
+	}, nil
 }
 
 func (c *SignatureConsumer) Listen() {

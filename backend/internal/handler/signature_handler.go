@@ -15,10 +15,10 @@ type SignatureHandler struct {
 	validate *validator.Validate
 }
 
-func NewSignatureHandler(svc service.SignatureService) *SignatureHandler {
+func NewSignatureHandler(svc service.SignatureService, v *validator.Validate) *SignatureHandler {
 	return &SignatureHandler{
 		svc: svc,
-		validate: validator.New(),
+		validate: v,
 	}
 }
 
