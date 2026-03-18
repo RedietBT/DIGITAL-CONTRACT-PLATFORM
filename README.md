@@ -16,6 +16,7 @@ Run the following commands to update the blueprints for the Global Swagger UI:
 swag init -g cmd/auth/main.go -o cmd/auth/docs --instanceName auth
 swag init -g cmd/profile/main.go -o cmd/profile/docs --instanceName profile
 swag init -g cmd/contract/main.go -o cmd/contract/docs --instanceName contract
+swag init -g cmd/signature/main.go -o cmd/signature/docs --instanceName signature
 
 ```
 
@@ -33,6 +34,8 @@ docker-compose up --build
 | --- | --- | --- |
 | **UserCreated** | Auth Service | Profile Service initializes user data. |
 | **UserDeleted** | Auth Service | Profile Service deletes profile; Contract Service purges owned contracts. |
+| **ContractPublished** | Contract Service | Signature Service initializes signature slots for assigned participants. |
+| **SignatureCreated** | Signature Service | Updates contract progress; Triggers Notification service. |
 
 ## 🔗 Infrastructure Access
 

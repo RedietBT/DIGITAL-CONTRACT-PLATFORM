@@ -35,9 +35,14 @@ func NewContractHandler(svc service.ContractService, v *validator.Validate) *Con
 }
 
 type CreateContractRequest struct {
-	Title       string `json:"title" validate:"required,min=3,no_scripts"`
-	Description string `json:"description" validate:"required,min=3,max=1000,no_scripts"`
-	Content     string `json:"content" validate:"required,no_scripts"` // Initial version text
+    Title          string      `json:"title" validate:"required,min=3,no_scripts"`
+    Description    string      `json:"description" validate:"required,min=3,max=1000,no_scripts"`
+    Content        string      `json:"content" validate:"required,no_scripts"`
+    ParticipantIDs []uuid.UUID `json:"participant_ids" validate:"required,gt=0"`
+}
+
+type AssignParticipantsRequest struct {
+    ParticipantIDs []uuid.UUID `json:"participant_ids" validate:"required,gt=0"`
 }
 
 //CreateContract godoc
@@ -95,6 +100,33 @@ func(h *ContractHandler) bindAndValidate(c *gin.Context, obj interface{}) error 
 		return err
 	}
 	return nil
+}
+
+// AssignParticipants godoc
+// @Summary      Assign signers to a contract
+// @Description  Adds users to the participant list and moves contract to 'pending' status
+// @Tags         contracts
+// @Param        id path string true "Contract ID"
+// @Param        body body AssignParticipantsRequest true "List of User IDs"
+// @Success      200 {object} map[string]string
+// @Router       /contracts/{id}/participants [post]
+// @Security     AuthKey
+func (h *ContractHandler) AssignParticipants(c *gin.Context) {
+    contractID, _ := uuid.Parse(c.Param("id"))
+    uidVal, _ := c.Get(middleware.UserIDKey)
+    userID := uidVal.(uuid.UUID)
+
+    var req AssignParticipantsRequest
+    if err := h.bindAndValidate(c, &req); err != nil {
+        return
+    }
+
+    if err := h.svc.AssignParticipants(c.Request.Context(), contractID, userID, req.ParticipantIDs); err != nil {
+        c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Participants assigned and contract published"})
 }
 
 // GetContract godoc

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/repository"
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 // Contrat service defines the business logic for contracts
 type ContractService interface {
 	CreateContract(ctx context.Context, contract *models.Contract, initialContent string) error
+	AssignParticipants(ctx context.Context, contractID uuid.UUID, userID uuid.UUID, participantIDs []uuid.UUID) error
 	GetContractDetails(ctx context.Context, contractID uuid.UUID) (*models.Contract, error)
 	ListUserContracts(ctx context.Context, userID uuid.UUID) ([]models.Contract, error)
 	UpdateContract(ctx context.Context, contractID uuid.UUID, userID uuid.UUID, title string,  description string) error
@@ -20,11 +22,15 @@ type ContractService interface {
 }
 
 type contractService struct {
-	repo repository.ContractRepository
+    repo      repository.ContractRepository
+    publisher *broker.ContractPublisher // <--- Add this line!
 }
 
-func NewContractService(repo repository.ContractRepository) ContractService {
-	return &contractService{repo: repo}
+func NewContractService(repo repository.ContractRepository, pub *broker.ContractPublisher) ContractService {
+    return &contractService{
+        repo:      repo,
+        publisher: pub,
+    }
 }
 
 // CreateContract create new contract
@@ -45,6 +51,40 @@ func (s *contractService) CreateContract(ctx context.Context, contract *models.C
     contract.Versions = append(contract.Versions, firstVersion)
 	// 3. Save via Repo
 	return s.repo.CreateContract(ctx, contract)
+}
+
+func (s *contractService) AssignParticipants(ctx context.Context, contractID uuid.UUID, userID uuid.UUID, participantIDs []uuid.UUID) error {
+    // 1. Fetch contract to check ownership
+    contract, err := s.repo.GetContractByID(ctx, contractID)
+    if err != nil {
+        return err
+    }
+
+    // 2. Security: Only owner can invite people
+    if contract.OwnerUserID != userID {
+        return errors.New("unauthorized: you cannot assign participants to this contract")
+    }
+
+    // 3. Save to contract_participants table via Repo
+    if err := s.repo.AssignParticipants(ctx, contractID, participantIDs); err != nil {
+        return err
+    }
+
+    // 4. Update status to 'pending' once people are invited
+    contract.Status = "pending"
+    if err := s.repo.UpdateContract(ctx, contract); err != nil {
+        return err
+    }
+
+    // 5. COMMUNICATION: Notify Signature Service via RabbitMQ
+    event := models.ContractPublishedEvent{
+        ContractID:     contractID,
+        ParticipantIDs: participantIDs,
+        Status:         "pending",
+    }
+    
+    // We only call the publisher once the DB transaction is successful
+    return s.publisher.PublishContractPublished(ctx, event)
 }
 
 func (s *contractService) GetContractDetails(ctx context.Context, contractID uuid.UUID) (*models.Contract, error) {

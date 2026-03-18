@@ -67,7 +67,10 @@ func main() {
 
 	// Intialize Layers (Dependency Injection)
 	repo := repository.NewContractRepository(db)
-	svc := service.NewContractService(repo)
+
+	// 1. Initialize the Publisher
+	contractPub, _ := broker.NewContractPublisher(conn)
+	svc := service.NewContractService(repo, contractPub)
 	validate := validator.New()
 	validate.RegisterValidation("no_scripts", func(fl validator.FieldLevel) bool {
     return !strings.Contains(strings.ToLower(fl.Field().String()), "<script>")
@@ -110,6 +113,7 @@ func main() {
 		contractRoutes.GET("", h.ListContracts)
 		contractRoutes.PUT("/:id", h.UpdateContract)
 		contractRoutes.DELETE("/:id", h.DeleteContract)
+		contractRoutes.POST("/:id/participants", h.AssignParticipants)
 	}
 
 	log.Println("🚀 Contract Service listening on :8083")

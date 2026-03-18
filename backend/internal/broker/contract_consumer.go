@@ -62,29 +62,26 @@ func (c *ContractConsumer) Start() error {
 		false,
 		nil,
 	)
+	
+	go func() {
+        for d := range msgs {
+            // 1. Try to unmarshal as UserCreatedEvent first
+            var createEvent models.UserCreatedEvent
+            if err := json.Unmarshal(d.Body, &createEvent); err == nil && createEvent.UserID != "" {
+                log.Printf("👤 Contract Service: Noticed new user created: %s", createEvent.UserID)
+                // Optional: You could save this to a local 'users' table if you want 
+                // to validate IDs before assigning them to contracts.
+                continue 
+            }
 
-	go func ()  {
-		for d := range msgs {
-			var event models.UserDeletedEvent
-			if err := json.Unmarshal(d.Body, &event); err != nil {
-				continue // Skip if message format is wrong
-			}
-
-			// Only act if the action is DELETE
-			if event.Action == "DELETE" {
-				log.Printf("🗑️ Contract Consumer: Removing data for User %s", event.UserID)
-				
-				// Using Background context because this is an async process
-				ctx := context.Background()
-
-				//We call the repo to delete all contracts ownwd by this user
-				err := c.repo.DeleteAllByUserID(ctx, event.UserID)
-				if err != nil {
-					log.Printf("❌ Failed to delete contracts for user %s: %v", event.UserID, err)
-				}
-			}
-		}
-	}()
-
-	return nil
+            // 2. Fallback to your existing Delete logic
+            var deleteEvent models.UserDeletedEvent
+            json.Unmarshal(d.Body, &deleteEvent)
+            if deleteEvent.Action == "DELETE" {
+                log.Printf("🗑️ Contract Consumer: Removing data for User %s", deleteEvent.UserID)
+                c.repo.DeleteAllByUserID(context.Background(), deleteEvent.UserID)
+            }
+        }
+    }()
+    return nil
 }

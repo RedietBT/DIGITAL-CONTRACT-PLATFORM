@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ type ContractRepository interface {
 	UpdateContract(ctx context.Context,contract *models.Contract) error
 	DeleteContract(ctx context.Context,contractID uuid.UUID) error
 	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
+	AssignParticipants(ctx context.Context, contractID uuid.UUID, userIDs []uuid.UUID) error
 }
 
 type contractRepository struct {
@@ -74,4 +76,26 @@ func (r *contractRepository) DeleteContract(ctx context.Context, contractID uuid
 func (r *contractRepository) DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error {
     // This deletes all contracts where owner_user_id matches the deleted user
     return r.db.WithContext(ctx).Delete(&models.Contract{}, "owner_user_id = ?", userID).Error
+}
+
+func (r *contractRepository) AssignParticipants(ctx context.Context, contractID uuid.UUID, participantIDs []uuid.UUID) error {
+    // We use a transaction to ensure all participants are added or none are
+    return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+        for _, pid := range participantIDs {
+            participant := models.ContractParticipant{
+                ID:         uuid.New(),
+                ContractID: contractID,
+                UserID:     pid,
+                Role:       "signer", // You can make this dynamic later
+                IsRequired:   true,
+                AddedAt:    time.Now(),
+            }
+            
+            // Note: 'contract_participants' is the table name from your design doc
+            if err := tx.Table("contract_participants").Create(&participant).Error; err != nil {
+                return err
+            }
+        }
+        return nil
+    })
 }

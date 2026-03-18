@@ -24,9 +24,13 @@ func NewSignatureHandler(svc service.SignatureService, v *validator.Validate) *S
 
 // Request DTOs
 type SignContractRequest struct {
-	ContractID uuid.UUID `json:"contract_id" validate:"required"`
-	VectorData []byte    `json:"vector_data" validate:"required_without=FileURL"`
-	FileURL    string    `json:"file_url" validate:"required_without=VectorData,omitempty,url"`
+    ContractID uuid.UUID `json:"contract_id" validate:"required"`
+    // For Drawing: SVG or JSON vector data
+    VectorData []byte    `json:"vector_data" validate:"required_without_all=FileURL TypedName"`
+    // For Uploading: URL to the hosted image
+    FileURL    string    `json:"file_url" validate:"required_without_all=VectorData TypedName,omitempty,url"`
+    // For Typing: The plain text name they typed
+    TypedName  string    `json:"typed_name" validate:"required_without_all=VectorData FileURL,omitempty,min=2"`
 }
 
 // SignContract godoc

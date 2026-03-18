@@ -39,7 +39,7 @@ type ContractParticipant struct {
 	ID           uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	ContractID   uuid.UUID  `gorm:"type:uuid;not null" json:"contract_id"`
 	UserID       uuid.UUID  `gorm:"type:uuid;not null" json:"user_id"` // Auth Service Reference
-	Role         string     `gorm:"type:varchar(50);not null" json:"role"` // signer, viewer, approver
+	Role         string     `gorm:"type:varchar(50);not null" json:"role"` // signer, viewer, approver	
 	SigningOrder int        `gorm:"default:0" json:"signing_order"`
 	IsRequired   bool       `gorm:"default:true" json:"is_required"`
 	Status       string     `gorm:"type:varchar(50);default:'pending'" json:"status"` // pending, signed, declined
