@@ -89,6 +89,24 @@ services:
     ports:
       - "8082:8082" 
 
+  signature-service:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: signature
+    environment: 
+      - DATABASE_DSN=postgres://Rediet:postgres@db:5432/digital_contract_db?sslmode=disable
+      - JWT_SECRET=super-secret-production-key-change-me
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      db:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy 
+    ports:
+      - "8084:8084" 
+
   swagger-ui:
     image: swaggerapi/swagger-ui
     container_name: global-swagger
@@ -99,12 +117,14 @@ services:
       URLS: "[ 
         { url: 'http://localhost:8080/swagger/doc.json', name: 'Auth Service' }, 
         { url: 'http://localhost:8083/swagger/doc.json', name: 'Contract Service' }, 
-        { url: 'http://localhost:8082/swagger/doc.json', name: 'Profile Service' } 
+        { url: 'http://localhost:8082/swagger/doc.json', name: 'Profile Service' },
+        { url: 'http://localhost:8084/swagger/doc.json', name: 'Signature Service' } 
       ]"
     depends_on:
       - auth-service
       - contract-service
       - profile-service
+      - signature-service
       
 volumes:
   postgres_data:
