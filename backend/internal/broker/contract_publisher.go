@@ -1,11 +1,12 @@
 package broker
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/models"
-	amqp "github.com/rabbitmq/amqp091-go"
+	amqp "github.com/rabbitmq/amqp091-go" // Standard modern library
 )
 
 type ContractPublisher struct {
@@ -18,14 +19,14 @@ func NewContractPublisher(conn *amqp.Connection) (*ContractPublisher, error) {
 		return nil, err
 	}
 
-	// 1. Declare the Exchange
+	// 1. Declare the Exchange (Topic is great for microservices)
 	err = ch.ExchangeDeclare(
-		"contract_events", // Name
-		"topic",           // Type
-		true,              // Durable
-		false,             // Auto-deleted
-		false,             // Internal
-		false,             // No-wait
+		"contract_events", 
+		"topic",           
+		true,              
+		false,             
+		false,             
+		false,             
 		nil,
 	)
 	if err != nil {
@@ -35,20 +36,20 @@ func NewContractPublisher(conn *amqp.Connection) (*ContractPublisher, error) {
 	return &ContractPublisher{ch: ch}, nil
 }
 
-// PublishContractPublished sends the message to the Signature Service
-func (p *ContractPublisher) PublishContractPublished(event models.ContractPublishedEvent) error {
-	// 2. Convert the Event struct to JSON bytes
+// PublishSignatureCreated notifies other services that a new signature was added
+func (p *ContractPublisher) PublishSignatureCreated(ctx context.Context, event models.SignatureCreatedEvent) error {
 	body, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 
-	// 3. Publish to the Exchange with the specific Routing Key
-	err = p.ch.Publish(
-		"contract_events",    // Exchange
-		"contract.published", // Routing Key (The Signature Consumer listens for this!)
-		false,                // Mandatory
-		false,                // Immediate
+	// Use PublishWithContext for modern RabbitMQ support
+	err = p.ch.PublishWithContext(
+		ctx,
+		"contract_events",   // Exchange
+		"signature.created", // Routing Key (Contract Service will listen for this)
+		false,               
+		false,               
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
@@ -56,10 +57,30 @@ func (p *ContractPublisher) PublishContractPublished(event models.ContractPublis
 	)
 
 	if err != nil {
-		log.Printf("Failed to publish contract event: %v", err)
+		log.Printf("Failed to publish signature event: %v", err)
 		return err
 	}
 
-	log.Printf(" [AMQP] Published Contract: %s", event.ContractID)
+	log.Printf(" [AMQP] Published Signature: %s for Contract: %s", event.SignatureID, event.ContractID)
 	return nil
+}
+
+// (Optional) You can keep this if the Signature Service ever needs to republish contract data
+func (p *ContractPublisher) PublishContractPublished(ctx context.Context, event models.ContractPublishedEvent) error {
+	body, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return p.ch.PublishWithContext(
+		ctx,
+		"contract_events",
+		"contract.published",
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		},
+	)
 }

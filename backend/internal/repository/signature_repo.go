@@ -15,6 +15,7 @@ type SignatureRepository interface {
 	GetSignatureByID(ctx context.Context, id uuid.UUID) (*models.Signature, error)
 	GetSignatureByContract(ctx context.Context, contractID uuid.UUID) ([]models.Signature, error)
 	DeleteSignature(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+	GetContractStatus(ctx context.Context, contractID uuid.UUID) (string, error)
 }
 
 type signatureRepository struct {
@@ -62,6 +63,15 @@ func (r *signatureRepository) DeleteSignature(ctx context.Context, id uuid.UUID,
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *signatureRepository) GetContractStatus(ctx context.Context, contractID uuid.UUID) (string, error) {
+    var status string
+    // This assumes you have a table 'contract_permissions' or 'contracts' in this schema
+    err := r.db.WithContext(ctx).Table("contract_permissions").
+        Select("status").Where("contract_id = ?", contractID).
+        Scan(&status).Error
+    return status, err
 }
 
 
