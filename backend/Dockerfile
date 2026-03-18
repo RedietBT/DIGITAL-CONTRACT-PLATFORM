@@ -2,7 +2,7 @@
 FROM golang:1.25-alpine AS builder
 WORKDIR /app
 
-# Install git
+# Install git and build essentials
 RUN apk add --no-cache git
 
 # Copy module files and download dependencies
@@ -23,10 +23,22 @@ WORKDIR /root/
 # Copy the binary from the builder
 COPY --from=builder /app/service .
 
-# FIX: Create the internal directory structure and copy the migrations
-# This ensures that "file://internal/migrations" works in your Go code
+# FIX 1: Grant execution permissions to the binary
+RUN chmod +x ./service
+
+# FIX 2: Copy migrations so GORM can find them at runtime
 RUN mkdir -p ./internal/migrations
 COPY --from=builder /app/internal/migrations ./internal/migrations
 
+# FIX 3: Copy Swagger documentation for the specific service
+# This maps the generated docs to the path expected by your gin-swagger handler
+ARG SERVICE_NAME
+RUN mkdir -p ./cmd/${SERVICE_NAME}/docs
+COPY --from=builder /app/cmd/${SERVICE_NAME}/docs ./cmd/${SERVICE_NAME}/docs
+
+# The port is handled by the docker-compose mapping, 
+# but 8080 is a good default for documentation.
 EXPOSE 8080
+
+# Run the service
 CMD ["./service"]

@@ -10,7 +10,7 @@ CREATE TABLE signature_schema.signature_types (
 );
 
 -- 3. Insert Default Types
-INSERT INTO signature_schema.signature_types (code name) VALUES
+INSERT INTO signature_schema.signature_types (code, name) VALUES
 ('drawn', 'Hand-drawn Signature'),
 ('typed', 'Typed Name Signature'),
 ('stamp', 'Uploaded Stamp/Seal'),
