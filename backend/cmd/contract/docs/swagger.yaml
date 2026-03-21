@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  handler.AssignParticipantsRequest:
+    properties:
+      participant_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - participant_ids
+    type: object
   handler.ChangePasswordRequest:
     properties:
       new_password:
@@ -14,18 +23,22 @@ definitions:
   handler.CreateContractRequest:
     properties:
       content:
-        description: Initial version text
         type: string
       description:
         maxLength: 1000
         minLength: 3
         type: string
+      participant_ids:
+        items:
+          type: string
+        type: array
       title:
         minLength: 3
         type: string
     required:
     - content
     - description
+    - participant_ids
     - title
     type: object
   handler.ForgotPasswordRequest:
@@ -82,6 +95,25 @@ definitions:
     - email
     - new_password
     - token
+    type: object
+  handler.SignContractRequest:
+    properties:
+      contract_id:
+        type: string
+      file_url:
+        description: 'For Uploading: URL to the hosted image'
+        type: string
+      typed_name:
+        description: 'For Typing: The plain text name they typed'
+        minLength: 2
+        type: string
+      vector_data:
+        description: 'For Drawing: SVG or JSON vector data'
+        items:
+          type: integer
+        type: array
+    required:
+    - contract_id
     type: object
   handler.UpdateContractRequest:
     properties:
@@ -229,6 +261,47 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  models.Signature:
+    properties:
+      contract_id:
+        type: string
+      device_info:
+        type: string
+      file_url:
+        description: VectorData stores the coordinates/paths as JSONB
+        type: string
+      hash:
+        description: SHA-256 for integrity
+        type: string
+      height:
+        type: number
+      id:
+        type: string
+      ip_address:
+        type: string
+      page_number:
+        description: Position on the PDF page
+        type: integer
+      pos_x:
+        type: number
+      pos_y:
+        type: number
+      render_style_id:
+        type: string
+      signature_type:
+        description: e.g., 'drawn', 'typed'
+        type: string
+      signed_at:
+        description: Audit Security
+        type: string
+      user_id:
+        type: string
+      vector_data:
+        description: 'FIX: Added swaggertype tag for the swagger generator'
+        type: object
+      width:
+        type: number
     type: object
   models.User:
     properties:
@@ -800,6 +873,34 @@ paths:
       summary: Update contract metadata
       tags:
       - contracts
+  /contracts/{id}/participants:
+    post:
+      description: Adds users to the participant list and moves contract to 'pending'
+        status
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: List of User IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AssignParticipantsRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AuthKey: []
+      summary: Assign signers to a contract
+      tags:
+      - contracts
   /profile/me:
     get:
       description: Fetches the profile for the user identified by the JWT token.
@@ -858,6 +959,90 @@ paths:
       summary: Update Profile
       tags:
       - profile
+  /signatures:
+    post:
+      consumes:
+      - application/json
+      description: Adds a user's signature (vector or image) to a pending contract
+      parameters:
+      - description: Signature Data
+        in: body
+        name: signature
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SignContractRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Signature'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AuthKey: []
+      summary: Create a signature
+      tags:
+      - signatures
+  /signatures/{id}:
+    delete:
+      description: Deletes a signature mark if the contract is still pending
+      parameters:
+      - description: Signature ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AuthKey: []
+      summary: Remove a signature
+      tags:
+      - signatures
+  /signatures/contract/{contract_id}:
+    get:
+      description: Retrieves a specific signature record by ID
+      parameters:
+      - description: Contract ID
+        in: path
+        name: contract_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Signature'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AuthKey: []
+      summary: Get a user's signature
+      tags:
+      - signatures
 securityDefinitions:
   AuthKey:
     in: header

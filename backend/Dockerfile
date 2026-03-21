@@ -10,8 +10,9 @@ RUN go mod download
 COPY . .
 
 ARG SERVICE_NAME
-# Build the binary
-RUN go build -o /app/service ./cmd/${SERVICE_NAME}/main.go
+# FIX: Explicitly set GOOS and GOARCH for the target container (Linux)
+# This prevents "exec format error"
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/service ./cmd/${SERVICE_NAME}/main.go
 
 # Stage 2: Small runtime
 FROM alpine:latest

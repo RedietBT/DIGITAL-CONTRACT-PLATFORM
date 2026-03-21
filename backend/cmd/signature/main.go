@@ -1,10 +1,11 @@
-package signature
+package main
 
 import (
 	"log"
 	"os"
 	"strings"
 
+	_ "github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/cmd/signature/docs"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/broker"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/database"
 	"github.com/RedietBT/DIGITAL-CONTRACT-PLATFORM/backend/internal/handler"

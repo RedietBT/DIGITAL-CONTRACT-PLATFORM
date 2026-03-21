@@ -856,6 +856,49 @@
                 }
             }
         },
+        "/contracts/{id}/participants": {
+            "post": {
+                "security": [
+                    {
+                        "AuthKey": []
+                    }
+                ],
+                "description": "Adds users to the participant list and moves contract to 'pending' status",
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Assign signers to a contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "List of User IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.AssignParticipantsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/profile/me": {
             "get": {
                 "security": [
@@ -947,9 +990,157 @@
                     }
                 }
             }
+        },
+        "/signatures": {
+            "post": {
+                "security": [
+                    {
+                        "AuthKey": []
+                    }
+                ],
+                "description": "Adds a user's signature (vector or image) to a pending contract",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Create a signature",
+                "parameters": [
+                    {
+                        "description": "Signature Data",
+                        "name": "signature",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.SignContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Signature"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/signatures/contract/{contract_id}": {
+            "get": {
+                "security": [
+                    {
+                        "AuthKey": []
+                    }
+                ],
+                "description": "Retrieves a specific signature record by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Get a user's signature",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "contract_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Signature"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/signatures/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "AuthKey": []
+                    }
+                ],
+                "description": "Deletes a signature mark if the contract is still pending",
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Remove a signature",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Signature ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "handler.AssignParticipantsRequest": {
+            "type": "object",
+            "required": [
+                "participant_ids"
+            ],
+            "properties": {
+                "participant_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "handler.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -971,17 +1162,23 @@
             "required": [
                 "content",
                 "description",
+                "participant_ids",
                 "title"
             ],
             "properties": {
                 "content": {
-                    "description": "Initial version text",
                     "type": "string"
                 },
                 "description": {
                     "type": "string",
                     "maxLength": 1000,
                     "minLength": 3
+                },
+                "participant_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "title": {
                     "type": "string",
@@ -1065,6 +1262,33 @@
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "handler.SignContractRequest": {
+            "type": "object",
+            "required": [
+                "contract_id"
+            ],
+            "properties": {
+                "contract_id": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "description": "For Uploading: URL to the hosted image",
+                    "type": "string"
+                },
+                "typed_name": {
+                    "description": "For Typing: The plain text name they typed",
+                    "type": "string",
+                    "minLength": 2
+                },
+                "vector_data": {
+                    "description": "For Drawing: SVG or JSON vector data",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -1280,6 +1504,65 @@
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "models.Signature": {
+            "type": "object",
+            "properties": {
+                "contract_id": {
+                    "type": "string"
+                },
+                "device_info": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "description": "VectorData stores the coordinates/paths as JSONB",
+                    "type": "string"
+                },
+                "hash": {
+                    "description": "SHA-256 for integrity",
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "page_number": {
+                    "description": "Position on the PDF page",
+                    "type": "integer"
+                },
+                "pos_x": {
+                    "type": "number"
+                },
+                "pos_y": {
+                    "type": "number"
+                },
+                "render_style_id": {
+                    "type": "string"
+                },
+                "signature_type": {
+                    "description": "e.g., 'drawn', 'typed'",
+                    "type": "string"
+                },
+                "signed_at": {
+                    "description": "Audit Security",
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "vector_data": {
+                    "description": "FIX: Added swaggertype tag for the swagger generator",
+                    "type": "object"
+                },
+                "width": {
+                    "type": "number"
                 }
             }
         },
